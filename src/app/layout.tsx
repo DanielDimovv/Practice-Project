@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import type { Metadata } from "next";
 
+import { AuthProvider } from "@/context/AuthContext";
 import { QueryProvider } from "@/components/QueryProvider";
 
 export const metadata: Metadata = {
@@ -24,9 +25,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="min-h-screen bg-background text-foreground font-sans">
-        <QueryProvider>
-          <div className="mx-auto max-w-4xl px-4 py-6">{children}</div>
-        </QueryProvider>
+        <AuthProvider>
+          <QueryProvider>
+            <div className="mx-auto  px-4 py-6">{children}</div>
+          </QueryProvider>
+        </AuthProvider>
       </body>
     </html>
   );

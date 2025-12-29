@@ -44,6 +44,7 @@ export const projectTasks = sqliteTable("project_task", {
   name: text().notNull(),
   description: text(),
   status: text().notNull().default("planned"),
+  deadline: text().notNull(),
   blockers: text(),
   assignee_id: int().references(() => usersTable.id, { onDelete: "set null" }),
 });
