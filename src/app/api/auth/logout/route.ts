@@ -1,4 +1,7 @@
-import { deleteSession } from "@/server/services/sessionService";
+import {
+  deleteSession,
+  cleanupExpiredSessions,
+} from "@/server/services/sessionService";
 import { cookies } from "next/headers";
 
 export async function POST() {
@@ -7,6 +10,7 @@ export async function POST() {
   const sessionId = cookieStore.get("session_id")?.value;
 
   if (sessionId) {
+    await cleanupExpiredSessions();
     await deleteSession(sessionId);
   }
 

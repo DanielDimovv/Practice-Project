@@ -8,7 +8,7 @@ import {
   SelectUser,
   usersTable,
 } from "../db/schema";
-import { eq, and, gt } from "drizzle-orm";
+import { eq, and, gt, lt } from "drizzle-orm";
 
 export const SESSION_DURATION = 60 * 60;
 
@@ -76,4 +76,10 @@ export async function requireAuth() {
     return { user: null, error: "Session expired or invalid" };
   }
   return { user, error: null };
+}
+
+export async function cleanupExpiredSessions() {
+  const now = Math.floor(Date.now() / 1000);
+
+  await db.delete(sessionsTable).where(lt(sessionsTable.expires_at, now));
 }

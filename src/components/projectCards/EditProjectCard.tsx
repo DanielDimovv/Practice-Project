@@ -19,6 +19,7 @@ import CreateTaskCard from "./CreateTaskCard";
 import { useDeleteProject } from "@/hooks/project";
 import { SelectUser } from "@/server/db/schema";
 import { Badge } from "@/components/ui/badge";
+import { useGetAllUsers } from "@/hooks/user";
 
 import {
   AlertDialog,
@@ -73,6 +74,7 @@ export default function EditProjectCard({
     blockers: projectData.blockers ?? "",
     userIds: assignedUsers.map((u) => u.id),
   });
+  const { data: allUsers } = useGetAllUsers();
 
   return (
     <Card className="w-full max-w-md mx-auto p-4 sm:p-6 ">
@@ -153,11 +155,11 @@ export default function EditProjectCard({
         <div className="space-y-2">
           <Label>Assigned Users</Label>
           <div className="flex flex-wrap gap-2 mt-2 -mb-2">
-            {assignedUsers.length === 0 ? (
+            {formData.userIds.length === 0 ? (
               <p className="text-muted-foreground text-sm">No users assigned</p>
             ) : (
-              assignedUsers
-                .filter((u) => formData.userIds.includes(u.id))
+              allUsers
+                ?.filter((u) => formData.userIds.includes(u.id))
                 .map((user) => (
                   <Badge key={user.id} variant="secondary">
                     {user.name}
