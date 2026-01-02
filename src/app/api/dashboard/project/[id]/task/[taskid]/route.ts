@@ -1,10 +1,17 @@
 import { deleteTask, updateTask } from "@/server/services/taskService";
+import { requireAuth } from "@/server/services/sessionService";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ taskid: string }> }
 ) {
   try {
+    const { user, error } = await requireAuth();
+
+    if (error) {
+      return Response.json({ error }, { status: 401 });
+    }
+
     const { taskid } = await params;
 
     const { name, description, status, deadline, blockers, assignee_id } =
@@ -34,6 +41,12 @@ export async function DELETE(
   { params }: { params: Promise<{ taskid: string }> }
 ) {
   try {
+    const { user, error } = await requireAuth();
+
+    if (error) {
+      return Response.json({ error }, { status: 401 });
+    }
+
     const { taskid } = await params;
     const deletedTask = await deleteTask(taskid);
 

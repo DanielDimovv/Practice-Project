@@ -1,15 +1,14 @@
 import { getProjectsForUser } from "@/server/services/projectService";
+import { requireAuth } from "@/server/services/sessionService";
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("userId");
-  const userRole = searchParams.get("role");
+export async function GET() {
+  const { user, error } = await requireAuth();
 
-  if (!userId || !userRole) {
-    return Response.json({ error: "Missing userId or role" }, { status: 400 });
+  if (error || !user) {
+    return Response.json({ error }, { status: 401 });
   }
 
-  const projects = await getProjectsForUser(Number(userId), userRole);
+  const projects = await getProjectsForUser(user.id, user.role);
 
   return Response.json(
     {

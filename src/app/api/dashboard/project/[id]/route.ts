@@ -4,6 +4,7 @@ import {
   deleteProject,
 } from "@/server/services/projectService";
 import { syncProjectAssignments } from "@/server/services/projectAssignmentService";
+import { requireAuth } from "@/server/services/sessionService";
 
 export type UpdateProject = {
   name?: string;
@@ -19,6 +20,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { user, error } = await requireAuth();
+
+    if (error) {
+      return Response.json({ error }, { status: 401 });
+    }
+
     const { id } = await params;
 
     const currentProject = await getProjectById(id);
@@ -38,6 +45,12 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { user, error } = await requireAuth();
+
+    if (error) {
+      return Response.json({ error }, { status: 401 });
+    }
+
     const { id } = await params;
     const body: UpdateProject = await request.json();
     const { userIds, ...projectData } = body;
@@ -66,6 +79,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { user, error } = await requireAuth();
+
+    if (error) {
+      return Response.json({ error }, { status: 401 });
+    }
+
     const { id } = await params;
 
     await deleteProject(id);

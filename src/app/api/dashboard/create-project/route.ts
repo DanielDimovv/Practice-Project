@@ -1,5 +1,6 @@
 import { createProject } from "@/server/services/projectService";
 import { syncProjectAssignments } from "@/server/services/projectAssignmentService";
+import { requireAuth } from "@/server/services/sessionService";
 
 type CreateProjectBody = {
   name: string;
@@ -14,6 +15,12 @@ export async function POST(request: Request) {
   // трябва ли да имам тип на json при положение че имам тип и проверявам local state който се изпраща насам
 
   try {
+    const { user, error } = await requireAuth();
+
+    if (error) {
+      return Response.json({ error }, { status: 401 });
+    }
+
     const body: CreateProjectBody = await request.json();
 
     const { name, description, status, deadline, blockers, userIds } = body;

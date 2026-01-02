@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectContent,
 } from "../ui/select";
-import { SheetHeader, SheetClose } from "../ui/sheet";
+import { SheetHeader, SheetClose, SheetTitle } from "../ui/sheet";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { useGetAssignedUsersToProject } from "@/hooks/user";
@@ -18,6 +18,7 @@ import { useCreateTask } from "@/hooks/task";
 type Props = {
   projectId: string;
   onSuccess: () => void;
+  isAdmin: boolean;
 };
 
 type Task = {
@@ -28,7 +29,11 @@ type Task = {
   blockers?: string;
   assigneeId: number | null;
 };
-export default function CreateTaskCard({ projectId, onSuccess }: Props) {
+export default function CreateTaskCard({
+  projectId,
+  onSuccess,
+  isAdmin,
+}: Props) {
   const { data: assignedUsers, isLoading: loadingUsers } =
     useGetAssignedUsersToProject(projectId);
   const {
@@ -47,7 +52,9 @@ export default function CreateTaskCard({ projectId, onSuccess }: Props) {
 
   return (
     <>
-      <SheetHeader>Add New Task</SheetHeader>
+      <SheetHeader>
+        <SheetTitle>Create New Task</SheetTitle>
+      </SheetHeader>
       <form
         className="space-y-4 mt-4"
         onSubmit={(e) => {
@@ -135,32 +142,39 @@ export default function CreateTaskCard({ projectId, onSuccess }: Props) {
             }}
           />
         </div>
-        <div className="space-y-2">
-          <Label>Assignee</Label>
-          <Select
-            value={taskData.assigneeId?.toString() ?? "none"}
-            onValueChange={(value) => {
-              setTaskData({
-                ...taskData,
-                assigneeId: value === "none" ? null : Number(value),
-              });
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select assignee" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Not assigned</SelectItem>
-              {assignedUsers?.users?.map((user: SelectUser) => (
-                <SelectItem key={user.id} value={user.id.toString()}>
-                  {user.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {loadingUsers && <p>Loading users...</p>}
+
+        {!loadingUsers && (
+          <div className="space-y-2">
+            <Label>Assignee</Label>
+            <Select
+              disabled={!isAdmin}
+              value={taskData.assigneeId?.toString() ?? "none"}
+              onValueChange={(value) => {
+                setTaskData({
+                  ...taskData,
+                  assigneeId: value === "none" ? null : Number(value),
+                });
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select assignee" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Not assigned</SelectItem>
+                {assignedUsers?.users?.map((user: SelectUser) => (
+                  <SelectItem key={user.id} value={user.id.toString()}>
+                    {user.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div className="flex gap-2">
-        {createTaskEroor && <p className="text-red-500 text-sm">{createTaskEroor.message}</p>}
+          {createTaskEroor && (
+            <p className="text-red-500 text-sm">{createTaskEroor.message}</p>
+          )}
           <Button type="submit">
             {pendingCreation ? "Creating..." : "Create"}
           </Button>

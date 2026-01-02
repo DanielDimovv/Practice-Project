@@ -1,12 +1,13 @@
 "use client";
+import { useCurrentUser, useLogout } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 import Link from "next/link";
-import { useAuthContext } from "@/context/AuthContext";
 
 export default function Header() {
-  const { user, logout } = useAuthContext();
-
-  console.log(`The user role ${user?.role}`);
+  const { data: user } = useCurrentUser();
+  const { mutate: logout } = useLogout();
+  const router = useRouter();
   return (
     <>
       <header>
@@ -26,7 +27,16 @@ export default function Header() {
           </div>
 
           <div className="text-right">
-            <Button size="sm" onClick={logout}>
+            <Button
+              size="sm"
+              onClick={() => {
+                logout(undefined, {
+                  onSuccess: () => {
+                    router.push("/auth");
+                  },
+                });
+              }}
+            >
               Logout
             </Button>
           </div>

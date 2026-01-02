@@ -17,6 +17,8 @@ import { SelectProject } from "@/server/db/schema";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import CreateTaskCard from "./CreateTaskCard";
 import { useDeleteProject } from "@/hooks/project";
+import { SelectUser } from "@/server/db/schema";
+import { Badge } from "@/components/ui/badge";
 
 import {
   AlertDialog,
@@ -42,10 +44,11 @@ export type EditProject = {
 type Props = {
   projectID: string;
   projectData: SelectProject;
-  assignedUsers: number[];
+  assignedUsers: SelectUser[];
   onSubmit: (data: EditProject) => void;
   isPendingProject: boolean;
   errorProject?: Error | null;
+  isAdmin: boolean;
 };
 
 export default function EditProjectCard({
@@ -55,6 +58,7 @@ export default function EditProjectCard({
   onSubmit,
   isPendingProject,
   errorProject,
+  isAdmin,
 }: Props) {
   const { mutate: deleteProject, isPending: isDeleting } =
     useDeleteProject(projectID);
@@ -67,7 +71,7 @@ export default function EditProjectCard({
     status: projectData.status,
     deadline: projectData.deadline,
     blockers: projectData.blockers ?? "",
-    userIds: assignedUsers,
+    userIds: assignedUsers.map((u) => u.id),
   });
 
   return (
@@ -147,9 +151,26 @@ export default function EditProjectCard({
         </div>
 
         <div className="space-y-2">
+          <Label>Assigned Users</Label>
+          <div className="flex flex-wrap gap-2 mt-2 -mb-2">
+            {assignedUsers.length === 0 ? (
+              <p className="text-muted-foreground text-sm">No users assigned</p>
+            ) : (
+              assignedUsers
+                .filter((u) => formData.userIds.includes(u.id))
+                .map((user) => (
+                  <Badge key={user.id} variant="secondary">
+                    {user.name}
+                  </Badge>
+                ))
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2">
           <UserMultiselect
             selectedUserIds={formData.userIds}
-            disabled={!isEditing}
+            disabled={!isEditing || !isAdmin}
             onChange={(ids) => {
               setFormData({ ...formData, userIds: ids });
             }}
@@ -185,7 +206,7 @@ export default function EditProjectCard({
                   status: projectData.status,
                   deadline: projectData.deadline,
                   blockers: projectData.blockers ?? "",
-                  userIds: assignedUsers,
+                  userIds: assignedUsers.map((u) => u.id),
                 });
                 setIsEditing(false);
               }}
@@ -202,12 +223,13 @@ export default function EditProjectCard({
                 <CreateTaskCard
                   projectId={projectData.id}
                   onSuccess={() => setIsSheetOpen(false)}
+                  isAdmin={isAdmin}
                 />
               </SheetContent>
             </Sheet>
           </div>
         </div>
-        {isEditing && (
+        {isEditing && isAdmin && (
           <div className="flex justify-center">
             <AlertDialog>
               <AlertDialogTrigger asChild>

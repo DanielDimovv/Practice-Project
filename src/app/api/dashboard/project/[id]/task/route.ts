@@ -1,10 +1,16 @@
 import { createTask, getProjectTasks } from "@/server/services/taskService";
+import { requireAuth } from "@/server/services/sessionService";
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { user, error } = await requireAuth();
+
+    if (error) {
+      return Response.json({ error }, { status: 401 });
+    }
     const { id } = await params;
 
     const projectTasks = await getProjectTasks(id);
@@ -23,6 +29,11 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { user, error } = await requireAuth();
+
+    if (error) {
+      return Response.json({ error }, { status: 401 });
+    }
     const { id } = await params;
 
     const { name, status, deadline, assignee_id, blockers, description } =

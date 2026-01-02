@@ -29,9 +29,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-type Task = { task: SelectTask; projectId: string };
+type Task = { task: SelectTask; projectId: string; isAdmin: boolean };
 
-export default function TaskCard({ task, projectId }: Task) {
+export default function TaskCard({ task, projectId, isAdmin }: Task) {
   const { data: assignedUsers } = useGetAssignedUsersToProject(projectId);
   const [isEditing, setIsEditing] = useState(false);
   const [taskData, setTaskData] = useState({
@@ -145,7 +145,7 @@ export default function TaskCard({ task, projectId }: Task) {
         <div className="space-y-2">
           <Label>Assignee</Label>
           <Select
-            disabled={!isEditing}
+            disabled={!isEditing || !isAdmin}
             value={taskData.assignee_id?.toString() ?? "none"}
             onValueChange={(value) => {
               setTaskData({
@@ -180,8 +180,12 @@ export default function TaskCard({ task, projectId }: Task) {
           ) : (
             <Button type="submit">{isUpdating ? "Saving..." : "Save"}</Button>
           )} */}
-          {updateError && <p className="text-red-500 text-sm">{updateError.message}</p>}
-          {deleteError && <p className="text-red-500 text-sm">{deleteError.message}</p>}
+          {updateError && (
+            <p className="text-red-500 text-sm">{updateError.message}</p>
+          )}
+          {deleteError && (
+            <p className="text-red-500 text-sm">{deleteError.message}</p>
+          )}
           <Button
             type="button"
             className={isEditing ? "hidden" : ""}
@@ -213,33 +217,35 @@ export default function TaskCard({ task, projectId }: Task) {
               Close
             </Button>
           )}
-          <div className="ml-auto">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button type="button" className="bg-red-600 hover:bg-red-400">
-                  {isDeleting ? "Deleting..." : "Delete"}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. The task will be permanently
-                    deleted.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => deleteTask()}
-                    className="bg-red-600 hover:bg-red-500"
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
+          {isAdmin && (
+            <div className="ml-auto">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" className="bg-red-600 hover:bg-red-400">
+                    {isDeleting ? "Deleting..." : "Delete"}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. The task will be permanently
+                      deleted.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => deleteTask()}
+                      className="bg-red-600 hover:bg-red-500"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
         </div>
       </form>
     </Card>

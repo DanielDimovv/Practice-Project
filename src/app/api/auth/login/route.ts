@@ -1,11 +1,16 @@
 import { loginUser } from "@/server/services/userService";
+import {
+  createSession,
+  SESSION_DURATION,
+} from "@/server/services/sessionService";
+import { cookies } from "next/headers";
 
 export async function POST(request: Request) {
   console.log(request);
 
   const body = await request.json();
 
-  const { email, password } = body;
+  const { email, password,} = body;
 
   if (!email || !password) {
     return Response.json(
@@ -22,6 +27,16 @@ export async function POST(request: Request) {
       { status: 401 }
     );
   }
+
+  const session = await createSession(user.id);
+  const cookieStore = await cookies();
+  cookieStore.set("session_id", session.id, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: SESSION_DURATION,
+    path: "/",
+  });
 
   return Response.json(
     {

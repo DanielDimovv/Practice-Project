@@ -8,14 +8,20 @@ import {
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import Link from "next/link";
-import { SelectProject } from "@/server/db/schema";
+import { SelectProject, SelectUser } from "@/server/db/schema";
 import { Label } from "../ui/label";
+import { useGetAssignedUsersToProject } from "@/hooks/user";
 
 type Props = {
   project: SelectProject;
 };
 
 export default function ViewProjectCard({ project }: Props) {
+  const {
+    data: assignedUsers,
+    isLoading: loadingUsers,
+    error: errorLoadingUsers,
+  } = useGetAssignedUsersToProject(project.id);
   return (
     <Card className="overflow-hidden">
       <CardHeader>
@@ -37,10 +43,23 @@ export default function ViewProjectCard({ project }: Props) {
 
         {project.deadline && (
           <p className="text-sm">
-            <span className="font-medium">Deadline:</span>
+            <span className="font-medium">Deadline: </span>
             {project.deadline}
           </p>
         )}
+        <div>
+          <Label>Assigned users:</Label>
+          <div className="mt-2">
+            {loadingUsers && <p>Loading users... </p>}
+            {errorLoadingUsers && <p> {errorLoadingUsers.message}</p>}
+            {!loadingUsers &&
+              assignedUsers?.users?.map((user: SelectUser) => (
+                <Badge key={user.id} variant="secondary">
+                  {user.name}
+                </Badge>
+              ))}
+          </div>
+        </div>
 
         {project.blockers && (
           <>

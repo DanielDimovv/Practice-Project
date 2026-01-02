@@ -2,14 +2,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useRegister, useLogin } from "@/hooks/useAuth";
-import { useAuthContext } from "@/context/AuthContext";
+
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export default function AuthPage() {
-  const { setUser } = useAuthContext();
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
   const [registerData, setRegisterData] = useState({
@@ -46,8 +45,7 @@ export default function AuthPage() {
             onSubmit={(e) => {
               e.preventDefault();
               login(loginData, {
-                onSuccess: (data) => {
-                  setUser(data.user);
+                onSuccess: () => {
                   router.push("/dashboard");
                 },
               });
@@ -102,8 +100,7 @@ export default function AuthPage() {
             onSubmit={(e) => {
               e.preventDefault();
               register(registerData, {
-                onSuccess: (data) => {
-                  setUser(data.user);
+                onSuccess: () => {
                   router.push("/dashboard");
                 },
               });

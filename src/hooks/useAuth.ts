@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 type RegisterData = {
   name: string;
@@ -45,6 +45,41 @@ export function useLogin() {
       }
 
       return await response.json();
+    },
+  });
+}
+
+export function useCurrentUser() {
+  return useQuery({
+    queryKey: ["currentUser"],
+    queryFn: async () => {
+      const response = await fetch("/api/auth/me");
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const data = await response.json();
+      return data.user;
+    },
+  });
+}
+
+export function useLogout() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Logout failed");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
   });
 }

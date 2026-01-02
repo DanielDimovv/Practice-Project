@@ -1,19 +1,17 @@
 "use client";
 
 import ViewProjectCard from "@/components/projectCards/ViewProjectCard";
-import { useAuthContext } from "@/context/AuthContext";
+import { useCurrentUser } from "@/hooks/useAuth";
+
 import { useGetUserProjects } from "@/hooks/user";
 import { SelectProject } from "@/server/db/schema";
 
 export default function Dashboard() {
   //Въпрос за добавяне на users към проекта и какво става когато имаме два hook-a в енда форма ( от арихитектурна гледна точка да се погледнат таблиците и да се обсъди какво правим ако в една форма ни се налага да позлваме два hooka )
 
-  const { user } = useAuthContext();
+  const { data: user } = useCurrentUser();
 
-  const { data, isLoading, isError, error } = useGetUserProjects(
-    user?.id ?? 0,
-    user?.role ?? "user"
-  );
+  const { data, isLoading, isError, error } = useGetUserProjects();
 
   return (
     <>

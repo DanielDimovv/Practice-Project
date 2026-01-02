@@ -10,6 +10,19 @@ export const usersTable = sqliteTable("users", {
   role: text().$type<UserRole>().notNull().default("user"),
 });
 
+export const sessionsTable = sqliteTable("sessions", {
+  id: text()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  user_id: int()
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  expires_at: int().notNull(),
+  created_at: int()
+    .notNull()
+    .$defaultFn(() => Math.floor(Date.now() / 1000)),
+});
+
 export const projectsTable = sqliteTable("projects", {
   id: text()
     .primaryKey()
@@ -95,3 +108,6 @@ export type InsertTask = typeof projectTasks.$inferInsert;
 
 export type SelectProjectAssignments = typeof projectAssignments.$inferSelect;
 export type InsertProjectAssignments = typeof projectAssignments.$inferInsert;
+
+export type SelectSession = typeof sessionsTable.$inferSelect;
+export type InsertSession = typeof sessionsTable.$inferInsert;

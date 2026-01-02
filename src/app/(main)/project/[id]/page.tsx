@@ -6,9 +6,12 @@ import { useGetAssignedUsersToProject } from "@/hooks/user";
 import { SelectUser, SelectTask } from "@/server/db/schema";
 import { useGetProjectTasks } from "@/hooks/task";
 import TaskCard from "@/components/projectCards/TaskCard";
+import { useCurrentUser } from "@/hooks/useAuth";
 
 export default function ProjectPage() {
   const { id } = useParams();
+  const { data: user } = useCurrentUser();
+  const isAdmin = user?.role === "admin";
 
   const {
     data: projectData,
@@ -19,19 +22,16 @@ export default function ProjectPage() {
   const { mutate: updateProject, isPending: isPendingProject } =
     useUpdateProject(id as string);
 
-  const { data: assignedUsersToTheProject } = useGetAssignedUsersToProject(
-    id as string
-  );
+  const { data: assignedUsersToTheProject, isLoading: loadingUsers } =
+    useGetAssignedUsersToProject(id as string);
+
   const assignedUsers = assignedUsersToTheProject?.users ?? [];
-  const userIDs = assignedUsers.map((user: SelectUser) => user.id);
 
   const { data: projectTasks, isLoading: loadingTasks } = useGetProjectTasks(
     id as string
   );
 
-  console.log(projectTasks);
-
-  if (projectLoading) {
+  if (projectLoading || loadingUsers) {
     return <p>Loading project...</p>;
   }
 
@@ -45,9 +45,10 @@ export default function ProjectPage() {
         projectID={id as string}
         projectData={projectData.project}
         errorProject={projectError}
-        assignedUsers={userIDs}
+        assignedUsers={assignedUsers}
         isPendingProject={isPendingProject}
         onSubmit={updateProject}
+        isAdmin={isAdmin}
       />
       <div className="border-t">
         <h2 className="text-xl font-semibold mb-4">Tasks</h2>
@@ -58,7 +59,12 @@ export default function ProjectPage() {
           )}
           {!loadingTasks &&
             projectTasks?.projectTasks?.map((task: SelectTask) => (
-              <TaskCard key={task.id} task={task} projectId={id as string} />
+              <TaskCard
+                key={task.id}
+                task={task}
+                projectId={id as string}
+                isAdmin={isAdmin}
+              />
             ))}
         </div>
       </div>

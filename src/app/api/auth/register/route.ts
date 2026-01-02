@@ -1,4 +1,9 @@
 import { createUser, getUserByEmail } from "@/server/services/userService";
+import {
+  createSession,
+  SESSION_DURATION,
+} from "@/server/services/sessionService";
+import { cookies } from "next/headers";
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -16,6 +21,17 @@ export async function POST(request: Request) {
   }
 
   const newUser = await createUser({ name, email, password });
+
+  const session = await createSession(newUser.id);
+
+  const cookieStore = await cookies();
+  cookieStore.set("session_id", session.id, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: SESSION_DURATION,
+    path: "/",
+  });
 
   return Response.json(
     {
