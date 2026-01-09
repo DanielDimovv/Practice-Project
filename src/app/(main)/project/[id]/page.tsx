@@ -3,7 +3,7 @@ import EditProjectCard from "@/components/projectCards/EditProjectCard";
 import { useGetProjectByID, useUpdateProject } from "@/hooks/project";
 import { useParams } from "next/navigation";
 import { useGetAssignedUsersToProject } from "@/hooks/user";
-import { SelectUser, SelectTask } from "@/server/db/schema";
+import { SelectTask } from "@/server/db/schema";
 import { useGetProjectTasks } from "@/hooks/task";
 import TaskCard from "@/components/projectCards/TaskCard";
 import { useCurrentUser } from "@/hooks/useAuth";

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SelectUser } from "@/server/db/schema";
 import { authFetch } from "@/lib/authFetch";
+import { UserRole } from "@/server/db/schema";
 
 // export function useGetUserProjects(userId: number, role: string) {
 //   return useQuery({
@@ -80,6 +81,49 @@ export function useGetAllUsers() {
 
       const data = await response.json();
       return data.users;
+    },
+  });
+}
+
+export function useUpdateUserRole() {
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      role,
+    }: {
+      userId: number;
+      role: UserRole;
+    }) => {
+      const response = await authFetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error);
+      }
+
+      return await response.json();
+    },
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (userId: number) => {
+      const response = await authFetch(`/api/users/${userId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error);
+      }
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
   });
 }

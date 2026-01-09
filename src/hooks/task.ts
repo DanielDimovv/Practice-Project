@@ -10,6 +10,22 @@ type TaskData = {
   assignee_id?: number | null;
 };
 
+export function useGetTaskById(projectId: string, taskId: string) {
+  return useQuery({
+    queryKey: ["task", taskId],
+    queryFn: async () => {
+      const response = await authFetch(
+        `/api/dashboard/project/${projectId}/task/${taskId}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch the task");
+      }
+      return response.json();
+    },
+  });
+}
+
 export function useGetProjectTasks(projectId: string) {
   return useQuery({
     queryKey: ["projectTasks", projectId],

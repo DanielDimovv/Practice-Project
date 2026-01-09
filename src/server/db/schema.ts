@@ -62,6 +62,20 @@ export const projectTasks = sqliteTable("project_task", {
   assignee_id: int().references(() => usersTable.id, { onDelete: "set null" }),
 });
 
+export const taskComments = sqliteTable("task_comments", {
+  id: int().primaryKey({ autoIncrement: true }),
+  task_id: text()
+    .notNull()
+    .references(() => projectTasks.id, { onDelete: "cascade" }),
+  user_id: int()
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  content: text().notNull(),
+  created_at: int()
+    .notNull()
+    .$defaultFn(() => Math.floor(Date.now() / 1000)),
+});
+
 export const usersRelations = relations(usersTable, ({ many }) => ({
   projectAssignments: many(projectAssignments),
   projectTasks: many(projectTasks),
@@ -111,3 +125,6 @@ export type InsertProjectAssignments = typeof projectAssignments.$inferInsert;
 
 export type SelectSession = typeof sessionsTable.$inferSelect;
 export type InsertSession = typeof sessionsTable.$inferInsert;
+
+export type SelectTaskComment = typeof taskComments.$inferSelect;
+export type InsertTaskComment = typeof taskComments.$inferInsert;

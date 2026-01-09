@@ -28,10 +28,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useRouter } from "next/navigation";
 
 type Task = { task: SelectTask; projectId: string; isAdmin: boolean };
 
 export default function TaskCard({ task, projectId, isAdmin }: Task) {
+  const router = useRouter();
   const { data: assignedUsers } = useGetAssignedUsersToProject(projectId);
   const [isEditing, setIsEditing] = useState(false);
   const [taskData, setTaskData] = useState({
@@ -192,6 +194,14 @@ export default function TaskCard({ task, projectId, isAdmin }: Task) {
             onClick={() => setIsEditing(true)}
           >
             Edit
+          </Button>
+          <Button
+            type="button"
+            onClick={() => {
+              router.push(`/project/${projectId}/task/${task.id}`);
+            }}
+          >
+            View Details
           </Button>
 
           <Button type="submit" className={!isEditing ? "hidden" : ""}>

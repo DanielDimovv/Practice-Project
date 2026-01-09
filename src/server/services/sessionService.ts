@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 
 import {
   sessionsTable,
-  InsertSession,
   SelectSession,
   SelectUser,
   usersTable,

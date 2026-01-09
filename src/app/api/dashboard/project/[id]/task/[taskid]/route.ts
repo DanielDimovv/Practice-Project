@@ -1,5 +1,30 @@
-import { deleteTask, updateTask } from "@/server/services/taskService";
+import {getTaskById, deleteTask, updateTask } from "@/server/services/taskService";
 import { requireAuth } from "@/server/services/sessionService";
+
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ taskid: string }> }
+) {
+  try {
+    const { error } = await requireAuth();
+
+    if (error) {
+      return Response.json({ error }, { status: 401 });
+    }
+
+    const { taskid } = await params;
+    const task = await getTaskById(taskid);
+
+    if (!task) {
+      return Response.json({ error: "Task not found" }, { status: 404 });
+    }
+
+    return Response.json({ task }, { status: 200 });
+  } catch {
+    return Response.json({ error: "Failed to fetch task" }, { status: 500 });
+  }
+}
 
 export async function PATCH(
   request: Request,
