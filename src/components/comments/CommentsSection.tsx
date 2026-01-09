@@ -1,4 +1,5 @@
 "use client";
+// имам invalidateQueries но също така позлвам и queryClient.setQueryData
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +26,11 @@ export default function CommentsSection({
 }: CommentsSectionProps) {
   const {
     sendComment: emitComment,
+    editCommentSocket,
+    deleteCommentSocket,
     onNewComment,
+    onCommentEdited,
+    onCommentDeleted,
     isConnected,
   } = useSocket(taskId);
 
@@ -54,6 +59,40 @@ export default function CommentsSection({
     return unsubscribe;
   }, [onNewComment, queryClient, taskId]);
 
+  useEffect(() => {
+    const unsubscribe = onCommentEdited((editedComment: CommentWithUser) => {
+      queryClient.setQueryData(
+        ["allTaskComments", taskId],
+        (oldData: { taskComments: CommentWithUser[] } | undefined) => {
+          if (!oldData) return oldData;
+          return {
+            taskComments: oldData.taskComments.map((c) =>
+              c.id === editedComment.id ? editedComment : c
+            ),
+          };
+        }
+      );
+    });
+    return unsubscribe;
+  }, [onCommentEdited, queryClient, taskId]);
+
+  useEffect(() => {
+    const unsubscribe = onCommentDeleted((commentId: number) => {
+      queryClient.setQueryData(
+        ["allTaskComments", taskId],
+        (oldData: { taskComments: CommentWithUser[] } | undefined) => {
+          if (!oldData) return oldData;
+          return {
+            taskComments: oldData.taskComments.filter(
+              (c) => c.id !== commentId
+            ),
+          };
+        }
+      );
+    });
+    return unsubscribe;
+  }, [onCommentDeleted, queryClient, taskId]);
+
   const {
     mutate: editComment,
     isPending: pendingEditing,
@@ -71,10 +110,22 @@ export default function CommentsSection({
   function handleSaveEdit() {
     if (editingCommentId === null) return;
 
+    const originalComment = comments.find((c) => c.id === editingCommentId);
+
     editComment(
       { commentId: String(editingCommentId), content: editContent },
       {
         onSuccess: () => {
+          if (currentUser && originalComment) {
+            editCommentSocket({
+              id: editingCommentId,
+              content: editContent,
+              createdAt: originalComment.createdAt,
+              userId: currentUser.id,
+              userName: currentUser.name,
+            });
+          }
+
           setEditingCommentId(null);
           setEditContent("");
         },
@@ -215,7 +266,11 @@ export default function CommentsSection({
                                 className="bg-red-500"
                                 type="button"
                                 onClick={() => {
-                                  deleteComment(String(comment.id));
+                                  deleteComment(String(comment.id), {
+                                    onSuccess: () => {
+                                      deleteCommentSocket(comment.id);
+                                    },
+                                  });
                                 }}
                               >
                                 {pendingDeleting ? "Deleting" : "Delete"}

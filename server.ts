@@ -56,6 +56,21 @@ app.prepare().then(() => {
         io.to(`task-${data.taskId}`).emit("new-comment", data.comment);
       }
     );
+    // Когато някой редактира коментар
+    socket.on(
+      "edit-comment",
+      (data: { taskId: string; comment: CommentWithUser }) => {
+        io.to(`task-${data.taskId}`).emit("comment-edited", data.comment);
+      }
+    );
+
+    // Когато някой изтрие коментар
+    socket.on(
+      "delete-comment",
+      (data: { taskId: string; commentId: number }) => {
+        io.to(`task-${data.taskId}`).emit("comment-deleted", data.commentId);
+      }
+    );
 
     socket.on("disconnect", () => {
       console.log("🔴 User disconnected:", socket.id);

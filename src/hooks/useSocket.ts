@@ -51,6 +51,19 @@ export function useSocket(taskId: string) {
     },
     [taskId]
   );
+  const editCommentSocket = useCallback(
+    (comment: CommentWithUser) => {
+      socketRef.current?.emit("edit-comment", { taskId, comment });
+    },
+    [taskId]
+  );
+
+  const deleteCommentSocket = useCallback(
+    (commentId: number) => {
+      socketRef.current?.emit("delete-comment", { taskId, commentId });
+    },
+    [taskId]
+  );
 
   const onNewComment = useCallback(
     (callback: (comment: CommentWithUser) => void) => {
@@ -65,9 +78,40 @@ export function useSocket(taskId: string) {
     []
   );
 
+  const onCommentEdited = useCallback(
+    (callback: (comment: CommentWithUser) => void) => {
+      const currentSocket = socketRef.current;
+      if (!currentSocket) return () => {};
+
+      currentSocket.on("comment-edited", callback);
+      return () => {
+        currentSocket.off("comment-edited", callback);
+      };
+    },
+    []
+  );
+
+  // Listener за изтрит коментар
+  const onCommentDeleted = useCallback(
+    (callback: (commentId: number) => void) => {
+      const currentSocket = socketRef.current;
+      if (!currentSocket) return () => {};
+
+      currentSocket.on("comment-deleted", callback);
+      return () => {
+        currentSocket.off("comment-deleted", callback);
+      };
+    },
+    []
+  );
+
   return {
     sendComment,
+    editCommentSocket,
+    deleteCommentSocket,
     onNewComment,
+    onCommentEdited,
+    onCommentDeleted,
     isConnected,
   };
 }
