@@ -125,7 +125,7 @@ export default function ManageRoleDialog() {
             )}
 
             {selectedUserData && (
-              <div className="space-y-2">
+              <div className="space-y-2 mb-2">
                 <Label>Change the current user role</Label>
                 <RadioGroup
                   value={newRole ?? ""}

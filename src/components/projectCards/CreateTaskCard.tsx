@@ -115,7 +115,7 @@ export default function CreateTaskCard({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="planned">Planned</SelectItem>
-              <SelectItem value="in progress">In Progress</SelectItem>
+              <SelectItem value="in_progress">In Progress</SelectItem>
               <SelectItem value="blocked">Blocked </SelectItem>
               <SelectItem value="done">Done</SelectItem>
             </SelectContent>

@@ -18,7 +18,6 @@ function getSocket(): Socket {
 export function useSocket(taskId: string) {
   const socketRef = useRef<Socket | null>(null);
 
-  // Инициализираме с реалното състояние (lazy init)
   const [isConnected, setIsConnected] = useState(() => {
     return socket?.connected ?? false;
   });
@@ -27,7 +26,6 @@ export function useSocket(taskId: string) {
     socketRef.current = getSocket();
     const currentSocket = socketRef.current;
 
-    // Следим connection status
     const onConnect = () => setIsConnected(true);
     const onDisconnect = () => setIsConnected(false);
 
@@ -35,7 +33,6 @@ export function useSocket(taskId: string) {
     currentSocket.on("disconnect", onDisconnect);
 
     currentSocket.emit("join-task", taskId);
-    console.log(`📡 Joined room: task-${taskId}`);
 
     return () => {
       currentSocket.emit("leave-task", taskId);
@@ -91,7 +88,6 @@ export function useSocket(taskId: string) {
     []
   );
 
-  // Listener за изтрит коментар
   const onCommentDeleted = useCallback(
     (callback: (commentId: number) => void) => {
       const currentSocket = socketRef.current;

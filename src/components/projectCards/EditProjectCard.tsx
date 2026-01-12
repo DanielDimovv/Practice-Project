@@ -88,68 +88,94 @@ export default function EditProjectCard({
       >
         <div className="space-y-2">
           <Label>Name</Label>
-          <Input
-            type="text"
-            value={formData.name}
-            readOnly={!isEditing}
-            onChange={(e) => {
-              setFormData({ ...formData, name: e.target.value });
-            }}
-          />
+          {isEditing ? (
+            <Input
+              type="text"
+              value={formData.name}
+              onChange={(e) => {
+                setFormData({ ...formData, name: e.target.value });
+              }}
+            />
+          ) : (
+            <p className="font-medium text-lg">{formData.name}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label>Description</Label>
-          <Textarea
-            rows={3}
-            value={formData.description}
-            readOnly={!isEditing}
-            onChange={(e) => {
-              setFormData({ ...formData, description: e.target.value });
-            }}
-          />
+          {isEditing ? (
+            <Textarea
+              rows={3}
+              value={formData.description}
+              onChange={(e) => {
+                setFormData({ ...formData, description: e.target.value });
+              }}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+              {formData.description || "No description"}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
           <Label>Status</Label>
-          <Select
-            value={formData.status}
-            disabled={!isEditing}
-            onValueChange={(newValue) =>
-              setFormData({ ...formData, status: newValue })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="planned">Planned</SelectItem>
-              <SelectItem value="in progress">In Progress</SelectItem>
-              <SelectItem value="blocked">Blocked </SelectItem>
-              <SelectItem value="done">Done</SelectItem>
-            </SelectContent>
-          </Select>
+          {isEditing ? (
+            <Select
+              value={formData.status}
+              onValueChange={(newValue) =>
+                setFormData({ ...formData, status: newValue })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="planned">Planned</SelectItem>
+                <SelectItem value="in progress">In Progress</SelectItem>
+                <SelectItem value="blocked">Blocked</SelectItem>
+                <SelectItem value="done">Done</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : (
+            <Badge
+              className="ml-2 bg-amber-400"
+              variant={
+                formData.status === "blocked" ? "destructive" : "secondary"
+              }
+            >
+              {formData.status}
+            </Badge>
+          )}
         </div>
         <div className="space-y-2">
           <Label>Deadline</Label>
-          <Input
-            type="date"
-            value={formData.deadline}
-            readOnly={!isEditing}
-            onChange={(e) => {
-              setFormData({ ...formData, deadline: e.target.value });
-            }}
-          />
+          {isEditing ? (
+            <Input
+              type="date"
+              value={formData.deadline}
+              onChange={(e) => {
+                setFormData({ ...formData, deadline: e.target.value });
+              }}
+            />
+          ) : (
+            <p className="text-sm">{formData.deadline || "No deadline"}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label>Blockers</Label>
-          <Textarea
-            rows={2}
-            value={formData.blockers}
-            readOnly={!isEditing}
-            onChange={(e) => {
-              setFormData({ ...formData, blockers: e.target.value });
-            }}
-          />
+          {isEditing ? (
+            <Textarea
+              rows={2}
+              value={formData.blockers}
+              onChange={(e) => {
+                setFormData({ ...formData, blockers: e.target.value });
+              }}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+              {formData.blockers || "No blockers"}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">

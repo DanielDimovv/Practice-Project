@@ -39,13 +39,11 @@ export default function CommentsSection({
 
   useEffect(() => {
     const unsubscribe = onNewComment((comment: CommentWithUser) => {
-      // Update-ваме React Query cache
       queryClient.setQueryData(
         ["allTaskComments", taskId],
         (oldData: { taskComments: CommentWithUser[] } | undefined) => {
           if (!oldData) return { taskComments: [comment] };
 
-          // Проверяваме дали вече го имаме (избягваме дублиране)
           const exists = oldData.taskComments.some((c) => c.id === comment.id);
           if (exists) return oldData;
 
@@ -123,6 +121,7 @@ export default function CommentsSection({
               createdAt: originalComment.createdAt,
               userId: currentUser.id,
               userName: currentUser.name,
+              userRole: currentUser.role,
             });
           }
 
@@ -162,6 +161,7 @@ export default function CommentsSection({
               createdAt: response.comment.created_at,
               userId: currentUser.id,
               userName: currentUser.name,
+              userRole: currentUser.role,
             };
             emitComment(fullComment);
           }
@@ -218,10 +218,9 @@ export default function CommentsSection({
                           : "bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-100"
                       }`}
                     >
-                      {/* Header: Badge + Date */}
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant={isOwnComment ? "secondary" : "outline"}>
-                          {`${comment.userName}-()`}
+                          {`${comment.userName} - (${comment.userRole})`}
                         </Badge>
                         <span className="text-xs opacity-70">
                           {new Date(comment.createdAt * 1000).toLocaleString(
@@ -236,7 +235,6 @@ export default function CommentsSection({
                         </span>
                       </div>
 
-                      {/* Comment text */}
                       {editingCommentId === comment.id ? (
                         <Textarea
                           value={editContent}
@@ -247,7 +245,6 @@ export default function CommentsSection({
                         <p className="text-sm">{comment.content}</p>
                       )}
 
-                      {/* Edit/Delete buttons - only for own comments */}
                       {isOwnComment && (
                         <div className="flex justify-end gap-2 mt-2">
                           {editingCommentId === comment.id ? (
@@ -295,7 +292,6 @@ export default function CommentsSection({
           )}
         </ScrollArea>
 
-        {/* New Comment Form */}
         <form onSubmit={handleSubmit} className="mt-4 space-y-2">
           <Textarea
             placeholder="Write a comment..."

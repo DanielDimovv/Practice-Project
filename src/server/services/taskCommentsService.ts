@@ -49,6 +49,7 @@ type CommentWithUser = {
   createdAt: number;
   userId: number;
   userName: string;
+  userRole: string;
 };
 
 export async function getAllCommentsByTaskId(
@@ -61,6 +62,7 @@ export async function getAllCommentsByTaskId(
       createdAt: taskComments.created_at,
       userId: taskComments.user_id,
       userName: usersTable.name,
+      userRole: usersTable.role,
     })
     .from(taskComments)
     .innerJoin(usersTable, eq(taskComments.user_id, usersTable.id))

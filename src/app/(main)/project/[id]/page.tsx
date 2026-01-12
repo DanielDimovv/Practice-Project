@@ -3,10 +3,12 @@ import EditProjectCard from "@/components/projectCards/EditProjectCard";
 import { useGetProjectByID, useUpdateProject } from "@/hooks/project";
 import { useParams } from "next/navigation";
 import { useGetAssignedUsersToProject } from "@/hooks/user";
-import { SelectTask } from "@/server/db/schema";
+
 import { useGetProjectTasks } from "@/hooks/task";
-import TaskCard from "@/components/projectCards/TaskCard";
+
 import { useCurrentUser } from "@/hooks/useAuth";
+import KanbanBoard from "@/components/kanban/KanbanBoard";
+import TaskStatisticsCard from "@/components/TaskStatisticsCard";
 
 export default function ProjectPage() {
   const { id } = useParams();
@@ -30,6 +32,7 @@ export default function ProjectPage() {
   const { data: projectTasks, isLoading: loadingTasks } = useGetProjectTasks(
     id as string
   );
+  const tasks = projectTasks?.projectTasks ?? [];
 
   if (projectLoading || loadingUsers) {
     return <p>Loading project...</p>;
@@ -41,31 +44,29 @@ export default function ProjectPage() {
 
   return (
     <div className="space-y-6">
-      <EditProjectCard
-        projectID={id as string}
-        projectData={projectData.project}
-        errorProject={projectError}
-        assignedUsers={assignedUsers}
-        isPendingProject={isPendingProject}
-        onSubmit={updateProject}
-        isAdmin={isAdmin}
-      />
+      <div className=" grid grid-cols-1 md:grid-cols-2 gap-3">
+        <EditProjectCard
+          projectID={id as string}
+          projectData={projectData.project}
+          errorProject={projectError}
+          assignedUsers={assignedUsers}
+          isPendingProject={isPendingProject}
+          onSubmit={updateProject}
+          isAdmin={isAdmin}
+        />
+        <TaskStatisticsCard tasks={tasks} />
+      </div>
+
       <div className="border-t">
         <h2 className="text-xl font-semibold mb-4">Tasks</h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+
+        <div>
           {loadingTasks && <p>Loading tasks...</p>}
-          {!loadingTasks && projectTasks?.projectTasks?.length === 0 && (
-            <p>No tasks yet</p>
-          )}
-          {!loadingTasks &&
-            projectTasks?.projectTasks?.map((task: SelectTask) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                projectId={id as string}
-                isAdmin={isAdmin}
-              />
-            ))}
+          <KanbanBoard
+            users={assignedUsers}
+            projectId={id as string}
+            projectTasks={tasks}
+          />
         </div>
       </div>
     </div>

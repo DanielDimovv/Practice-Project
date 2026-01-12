@@ -7,6 +7,7 @@ export type CommentWithUser = {
   createdAt: number;
   userId: number;
   userName: string;
+  userRole:string
 };
 
 type CommentsResponse = {

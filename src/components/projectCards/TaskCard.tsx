@@ -14,7 +14,7 @@ import { Input } from "../ui/input";
 import { SelectUser } from "@/server/db/schema";
 import { Button } from "../ui/button";
 import { useGetAssignedUsersToProject } from "@/hooks/user";
-import { SelectTask } from "@/server/db/schema";
+import { SelectTask, TaskStatus } from "@/server/db/schema";
 import { Textarea } from "../ui/textarea";
 import { useDeleteTask, useUpdateTask } from "@/hooks/task";
 import {
@@ -29,6 +29,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
+import { Badge } from "../ui/badge";
 
 type Task = { task: SelectTask; projectId: string; isAdmin: boolean };
 
@@ -54,14 +55,8 @@ export default function TaskCard({ task, projectId, isAdmin }: Task) {
   const {
     mutate: updateTask,
     isPending: isUpdating,
-    status,
     error: updateError,
   } = useUpdateTask(taskData.id, projectId);
-
-  console.log("=== TaskCard render ===");
-  console.log("isEditing:", isEditing);
-  console.log("isUpdating:", isUpdating);
-  console.log("mutation status:", status);
 
   return (
     <Card className="p-4 pt-0">
@@ -78,110 +73,132 @@ export default function TaskCard({ task, projectId, isAdmin }: Task) {
       >
         <div className="space-y-2">
           <Label>Name</Label>
-          <Input
-            readOnly={!isEditing}
-            type="text"
-            value={taskData.name}
-            onChange={(e) => {
-              setTaskData({ ...taskData, name: e.target.value });
-            }}
-          />
+          {isEditing ? (
+            <Input
+              type="text"
+              value={taskData.name}
+              onChange={(e) => {
+                setTaskData({ ...taskData, name: e.target.value });
+              }}
+            />
+          ) : (
+            <p className="font-medium text-lg">{taskData.name}</p>
+          )}
         </div>
         <div className="space-y-2 ">
           <Label>Description</Label>
 
-          <Textarea
-            readOnly={!isEditing}
-            rows={3}
-            value={taskData.description}
-            onChange={(e) => {
-              setTaskData({ ...taskData, description: e.target.value });
-            }}
-          />
+          {isEditing ? (
+            <Textarea
+              rows={3}
+              value={taskData.description}
+              onChange={(e) => {
+                setTaskData({ ...taskData, description: e.target.value });
+              }}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+              {taskData.description || "No description"}
+            </p>
+          )}
         </div>
         <div className="flex justify-between gap-2">
           <div className="space-y-2">
             <Label>Status</Label>
-            <Select
-              disabled={!isEditing}
-              value={taskData.status}
-              onValueChange={(newValue) => {
-                setTaskData({ ...taskData, status: newValue });
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="planned">Planned</SelectItem>
-                <SelectItem value="in progress">In Progress</SelectItem>
-                <SelectItem value="blocked">Blocked </SelectItem>
-                <SelectItem value="done">Done</SelectItem>
-              </SelectContent>
-            </Select>
+            {isEditing ? (
+              <Select
+                value={taskData.status}
+                onValueChange={(newValue) => {
+                  setTaskData({ ...taskData, status: newValue as TaskStatus });
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="planned">Planned</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="blocked">Blocked</SelectItem>
+                  <SelectItem value="done">Done</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <Badge
+                className="ml-2 bg-amber-300"
+                variant={
+                  taskData.status === "blocked" ? "destructive" : "secondary"
+                }
+              >
+                {taskData.status.replace("_", " ")}
+              </Badge>
+            )}
           </div>
           <div className="space-y-2">
             <Label>Deadline</Label>
-            <Input
-              readOnly={!isEditing}
-              type="date"
-              value={taskData.deadline}
-              onChange={(e) => {
-                setTaskData({ ...taskData, deadline: e.target.value });
-              }}
-            />
+            {isEditing ? (
+              <Input
+                type="date"
+                value={taskData.deadline}
+                onChange={(e) => {
+                  setTaskData({ ...taskData, deadline: e.target.value });
+                }}
+              />
+            ) : (
+              <p className="text-sm">{taskData.deadline || "No deadline"}</p>
+            )}
           </div>
         </div>
 
         <div className="space-y-2">
           <Label>Blockers</Label>
-          <Textarea
-            readOnly={!isEditing}
-            rows={2}
-            value={taskData.blockers}
-            onChange={(e) => {
-              setTaskData({ ...taskData, blockers: e.target.value });
-            }}
-          />
+          {isEditing ? (
+            <Textarea
+              rows={2}
+              value={taskData.blockers}
+              onChange={(e) => {
+                setTaskData({ ...taskData, blockers: e.target.value });
+              }}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+              {taskData.blockers || "No blockers"}
+            </p>
+          )}
         </div>
         <div className="space-y-2">
           <Label>Assignee</Label>
-          <Select
-            disabled={!isEditing || !isAdmin}
-            value={taskData.assignee_id?.toString() ?? "none"}
-            onValueChange={(value) => {
-              setTaskData({
-                ...taskData,
-                assignee_id: value === "none" ? null : Number(value),
-              });
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select assignee" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Not assigned</SelectItem>
-              {assignedUsers?.users?.map((user: SelectUser) => (
-                <SelectItem key={user.id} value={user.id.toString()}>
-                  {user.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex gap-2">
-          {/* {!isEditing ? (
-            <Button
-              type="button"
-              onClick={() => {
-                setIsEditing(true);
+          {isEditing ? (
+            <Select
+              disabled={!isAdmin}
+              value={taskData.assignee_id?.toString() ?? "none"}
+              onValueChange={(value) => {
+                setTaskData({
+                  ...taskData,
+                  assignee_id: value === "none" ? null : Number(value),
+                });
               }}
             >
-              Edit
-            </Button>
+              <SelectTrigger>
+                <SelectValue placeholder="Select assignee" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Not assigned</SelectItem>
+                {assignedUsers?.users?.map((user: SelectUser) => (
+                  <SelectItem key={user.id} value={user.id.toString()}>
+                    {user.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           ) : (
-            <Button type="submit">{isUpdating ? "Saving..." : "Save"}</Button>
-          )} */}
+            <Badge variant="secondary" className="ml-2 bg-amber-300">
+              {assignedUsers?.users?.find(
+                (u: SelectUser) => u.id === taskData.assignee_id
+              )?.name || "Not assigned"}
+            </Badge>
+          )}
+        </div>
+        <div className="flex gap-2">
           {updateError && (
             <p className="text-red-500 text-sm">{updateError.message}</p>
           )}
@@ -194,14 +211,6 @@ export default function TaskCard({ task, projectId, isAdmin }: Task) {
             onClick={() => setIsEditing(true)}
           >
             Edit
-          </Button>
-          <Button
-            type="button"
-            onClick={() => {
-              router.push(`/project/${projectId}/task/${task.id}`);
-            }}
-          >
-            View Details
           </Button>
 
           <Button type="submit" className={!isEditing ? "hidden" : ""}>
@@ -227,6 +236,14 @@ export default function TaskCard({ task, projectId, isAdmin }: Task) {
               Close
             </Button>
           )}
+          <Button
+            type="button"
+            onClick={() => {
+              router.push(`/project/${projectId}`);
+            }}
+          >
+            Back to project
+          </Button>
           {isAdmin && (
             <div className="ml-auto">
               <AlertDialog>

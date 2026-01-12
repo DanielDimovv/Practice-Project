@@ -96,6 +96,29 @@ export function useUpdateTask(taskId: string, projectId: string) {
   });
 }
 
+export function useUpdateTaskStatus(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ taskId, status }: { taskId: string; status: string }) => {
+      const response = await authFetch(
+        `/api/dashboard/project/${projectId}/task/${taskId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to update task status");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projectTasks", projectId] });
+    },
+  });
+}
+
 export function useDeleteTask(taskId: string, projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({

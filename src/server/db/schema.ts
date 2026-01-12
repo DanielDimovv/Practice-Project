@@ -1,6 +1,7 @@
 import { sqliteTable, int, text, primaryKey } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 export type UserRole = "admin" | "user";
+export type TaskStatus = "planned" | "in_progress" | "blocked" | "done";
 
 export const usersTable = sqliteTable("users", {
   id: int().primaryKey({ autoIncrement: true }),
@@ -56,7 +57,7 @@ export const projectTasks = sqliteTable("project_task", {
     .references(() => projectsTable.id, { onDelete: "cascade" }),
   name: text().notNull(),
   description: text(),
-  status: text().notNull().default("planned"),
+  status: text().$type<TaskStatus>().notNull().default("planned"),
   deadline: text().notNull(),
   blockers: text(),
   assignee_id: int().references(() => usersTable.id, { onDelete: "set null" }),
