@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "nodemon --exec tsx server.ts --watch server.ts --watch src/hooks/useSocket.ts -e ts",
+    "dev": "next dev",
     "build": "next build",
-    "start": "cross-env NODE_ENV=production tsx server.ts",
-    "lint": "eslint"
+    "start": "next start",
+    "lint": "eslint",
+    "socket-server": "tsx socket-server.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

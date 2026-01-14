@@ -1,7 +1,9 @@
 "use client";
-// имам invalidateQueries но също така позлвам и queryClient.setQueryData
 
 import { useState, useEffect } from "react";
+import { socket } from "../../../socket";
+import { useQueryClient } from "@tanstack/react-query";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -10,8 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useGetAllComments, useCreateComment } from "@/hooks/comments";
 import { useCurrentUser } from "@/hooks/useAuth";
 import { useEditComment, useDeleteComment } from "@/hooks/comments";
-import { useQueryClient } from "@tanstack/react-query";
-import { useSocket } from "@/hooks/useSocket";
 
 import { CommentWithUser } from "@/hooks/comments";
 
@@ -24,58 +24,53 @@ export default function CommentsSection({
   taskId,
   projectId,
 }: CommentsSectionProps) {
-  const {
-    sendComment: emitComment,
-    editCommentSocket,
-    deleteCommentSocket,
-    onNewComment,
-    onCommentEdited,
-    onCommentDeleted,
-    isConnected,
-  } = useSocket(taskId);
-
   const { data: currentUser } = useCurrentUser();
+  const [isConnected, setIsConnected] = useState(false);
+
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const unsubscribe = onNewComment((comment: CommentWithUser) => {
+    const joinRoom = () => {
+      socket.emit("join-task", taskId);
+    };
+
+    if (socket.connected) {
+      joinRoom();
+    }
+
+    socket.on("connect", joinRoom);
+
+    const onConnect = () => setIsConnected(true);
+    const onDisconnect = () => setIsConnected(false);
+
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+
+    const handleNewComment = (comment: CommentWithUser) => {
       queryClient.setQueryData(
         ["allTaskComments", taskId],
         (oldData: { taskComments: CommentWithUser[] } | undefined) => {
           if (!oldData) return { taskComments: [comment] };
-
-          const exists = oldData.taskComments.some((c) => c.id === comment.id);
-          if (exists) return oldData;
-
-          return {
-            taskComments: [...oldData.taskComments, comment],
-          };
+          return { taskComments: [...oldData.taskComments, comment] };
         }
       );
-    });
+    };
 
-    return unsubscribe;
-  }, [onNewComment, queryClient, taskId]);
-
-  useEffect(() => {
-    const unsubscribe = onCommentEdited((editedComment: CommentWithUser) => {
+    const handleEditedComment = (comment: CommentWithUser) => {
       queryClient.setQueryData(
         ["allTaskComments", taskId],
         (oldData: { taskComments: CommentWithUser[] } | undefined) => {
           if (!oldData) return oldData;
           return {
             taskComments: oldData.taskComments.map((c) =>
-              c.id === editedComment.id ? editedComment : c
+              c.id === comment.id ? comment : c
             ),
           };
         }
       );
-    });
-    return unsubscribe;
-  }, [onCommentEdited, queryClient, taskId]);
+    };
 
-  useEffect(() => {
-    const unsubscribe = onCommentDeleted((commentId: number) => {
+    const handleDeletedComment = (commentId: number) => {
       queryClient.setQueryData(
         ["allTaskComments", taskId],
         (oldData: { taskComments: CommentWithUser[] } | undefined) => {
@@ -87,15 +82,28 @@ export default function CommentsSection({
           };
         }
       );
-    });
-    return unsubscribe;
-  }, [onCommentDeleted, queryClient, taskId]);
+    };
 
-  const {
-    mutate: editComment,
-    isPending: pendingEditing,
-    error: errorEditing,
-  } = useEditComment(taskId, projectId);
+    socket.on("new-comment", handleNewComment);
+    socket.on("edited-comment", handleEditedComment);
+    socket.on("comment-deleted", handleDeletedComment);
+
+    return () => {
+      socket.offAny();
+      socket.emit("leave-task", taskId);
+      socket.off("connect", joinRoom);
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.off("new-comment", handleNewComment);
+      socket.off("edited-comment", handleEditedComment);
+      socket.off("comment-deleted", handleDeletedComment);
+    };
+  }, [taskId, projectId, queryClient]);
+
+  const { mutate: editComment, isPending: pendingEditing } = useEditComment(
+    taskId,
+    projectId
+  );
 
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
@@ -108,23 +116,21 @@ export default function CommentsSection({
   function handleSaveEdit() {
     if (editingCommentId === null) return;
 
-    const originalComment = comments.find((c) => c.id === editingCommentId);
-
     editComment(
       { commentId: String(editingCommentId), content: editContent },
       {
-        onSuccess: () => {
-          if (currentUser && originalComment) {
-            editCommentSocket({
-              id: editingCommentId,
-              content: editContent,
-              createdAt: originalComment.createdAt,
-              userId: currentUser.id,
-              userName: currentUser.name,
-              userRole: currentUser.role,
-            });
-          }
-
+        onSuccess: (data) => {
+          socket.emit("edit-comment", {
+            taskId,
+            comment: {
+              id: data.comment.id,
+              content: data.comment.content,
+              createdAt: data.comment.created_at,
+              userId: currentUser?.id,
+              userName: currentUser?.name,
+              userRole: currentUser?.role,
+            },
+          });
           setEditingCommentId(null);
           setEditContent("");
         },
@@ -151,57 +157,51 @@ export default function CommentsSection({
     createComment(
       { content: newComment },
       {
-        onSuccess: (response) => {
-          setNewComment("");
+        onSuccess: (data) => {
+          const payload = {
+            taskId,
+            comment: {
+              id: data.comment.id,
+              content: data.comment.content,
+              createdAt: data.comment.created_at,
+              userId: currentUser?.id,
+              userName: currentUser?.name,
+              userRole: currentUser?.role,
+            },
+          };
 
-          if (response.comment && currentUser) {
-            const fullComment: CommentWithUser = {
-              id: response.comment.id,
-              content: response.comment.content,
-              createdAt: response.comment.created_at,
-              userId: currentUser.id,
-              userName: currentUser.name,
-              userRole: currentUser.role,
-            };
-            emitComment(fullComment);
-          }
+          socket.emit("send-comment", payload);
+          setNewComment("");
         },
       }
     );
   }
-  const {
-    mutate: deleteComment,
-    isPending: pendingDeleting,
-    isError: errorDeleting,
-  } = useDeleteComment(taskId, projectId);
+
+  const { mutate: deleteComment, isPending: pendingDeleting } =
+    useDeleteComment(taskId, projectId);
 
   if (isLoading) return <p>Loading comments...</p>;
   if (error) return <p>Error loading comments</p>;
 
   const comments = data?.taskComments ?? [];
-  const sortedComments = [...comments].reverse();
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>
           Comments ({comments.length})
-          <span
-            className={`ml-2 text-xs ${
-              isConnected ? "text-green-500" : "text-red-500"
-            }`}
-          >
-            {isConnected ? "● Live" : "○ Offline"}
+          <span className={isConnected ? "text-green-500" : "text-red-500"}>
+            {isConnected ? " 🟢" : " 🔴"}
           </span>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[300px] pr-4">
-          {sortedComments.length === 0 ? (
+          {comments.length === 0 ? (
             <p className="text-muted-foreground">No comments yet</p>
           ) : (
             <div className="space-y-4">
-              {sortedComments.map((comment) => {
+              {comments.map((comment) => {
                 const isOwnComment = comment.userId === currentUser?.id;
 
                 return (
@@ -265,7 +265,10 @@ export default function CommentsSection({
                                 onClick={() => {
                                   deleteComment(String(comment.id), {
                                     onSuccess: () => {
-                                      deleteCommentSocket(comment.id);
+                                      socket.emit("delete-comment", {
+                                        taskId,
+                                        commentId: comment.id,
+                                      });
                                     },
                                   });
                                 }}
