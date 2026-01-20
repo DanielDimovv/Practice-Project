@@ -36,13 +36,18 @@ export default function CommentsSection({
 
     if (socket.connected) {
       joinRoom();
+      onConnect();
     }
 
     socket.on("connect", joinRoom);
 
-    const onConnect = () => setIsConnected(true);
-    const onDisconnect = () => setIsConnected(false);
+    function onConnect() {
+      setIsConnected(true);
+    }
 
+    function onDisconnect() {
+      setIsConnected(false);
+    }
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
 
@@ -98,7 +103,7 @@ export default function CommentsSection({
       socket.off("edited-comment", handleEditedComment);
       socket.off("comment-deleted", handleDeletedComment);
     };
-  }, [taskId, projectId, queryClient]);
+  }, [taskId, queryClient]);
 
   const { mutate: editComment, isPending: pendingEditing } = useEditComment(
     taskId,

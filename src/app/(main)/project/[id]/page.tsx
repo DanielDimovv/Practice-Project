@@ -9,11 +9,14 @@ import { useGetProjectTasks } from "@/hooks/task";
 import { useCurrentUser } from "@/hooks/useAuth";
 import KanbanBoard from "@/components/kanban/KanbanBoard";
 import TaskStatisticsCard from "@/components/TaskStatisticsCard";
+import { useState } from "react";
+import ViewEditProjectCard from "@/components/projectCards/ViewEditProjectCard";
 
 export default function ProjectPage() {
   const { id } = useParams();
   const { data: user } = useCurrentUser();
   const isAdmin = user?.role === "admin";
+  const [isEditingProject, setIsEditingProject] = useState(false);
 
   const {
     data: projectData,
@@ -45,15 +48,28 @@ export default function ProjectPage() {
   return (
     <div className="space-y-6">
       <div className=" grid grid-cols-1 md:grid-cols-2 gap-3">
-        <EditProjectCard
-          projectID={id as string}
-          projectData={projectData.project}
-          errorProject={projectError}
-          assignedUsers={assignedUsers}
-          isPendingProject={isPendingProject}
-          onSubmit={updateProject}
-          isAdmin={isAdmin}
-        />
+        {isEditingProject ? (
+          <EditProjectCard
+            projectID={id as string}
+            projectData={projectData.project}
+            errorProject={projectError}
+            assignedUsers={assignedUsers}
+            isPendingProject={isPendingProject}
+            onSubmit={updateProject}
+            isAdmin={isAdmin}
+            setIsEditing={setIsEditingProject}
+          />
+        ) : (
+          <ViewEditProjectCard
+            projectData={projectData.project}
+            projectId={id as string}
+            setIsEditing={setIsEditingProject}
+            isAdmin={isAdmin}
+            userName={user.name}
+            assignedUsers={assignedUsers}
+          />
+        )}
+
         <TaskStatisticsCard tasks={tasks} />
       </div>
 

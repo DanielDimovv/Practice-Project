@@ -29,7 +29,7 @@ serverIo.on("connection", (socket) => {
 
   socket.on(
     "send-comment",
-    async (data: { taskId: string; comment: CommentWithUser }) => {
+    (data: { taskId: string; comment: CommentWithUser }) => {
       serverIo.to(`task-${data.taskId}`).emit("new-comment", data.comment);
     }
   );

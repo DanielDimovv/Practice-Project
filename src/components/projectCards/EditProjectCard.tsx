@@ -50,6 +50,7 @@ type Props = {
   isPendingProject: boolean;
   errorProject?: Error | null;
   isAdmin: boolean;
+  setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export default function EditProjectCard({
@@ -60,12 +61,12 @@ export default function EditProjectCard({
   isPendingProject,
   errorProject,
   isAdmin,
+  setIsEditing,
 }: Props) {
   const { mutate: deleteProject, isPending: isDeleting } =
     useDeleteProject(projectID);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  console.log(isEditing);
+
   const [formData, setFormData] = useState<EditProject>({
     name: projectData.name,
     description: projectData.description ?? "",
@@ -87,95 +88,73 @@ export default function EditProjectCard({
         }}
       >
         <div className="space-y-2">
+          <Label>Attach a picture</Label>
+          <input type="file" accept="image/*" onChange={handleUpload} />
+        </div>
+        <div className="space-y-2">
           <Label>Name</Label>
-          {isEditing ? (
-            <Input
-              type="text"
-              value={formData.name}
-              onChange={(e) => {
-                setFormData({ ...formData, name: e.target.value });
-              }}
-            />
-          ) : (
-            <p className="font-medium text-lg">{formData.name}</p>
-          )}
+
+          <Input
+            type="text"
+            value={formData.name}
+            onChange={(e) => {
+              setFormData({ ...formData, name: e.target.value });
+            }}
+          />
         </div>
         <div className="space-y-2">
           <Label>Description</Label>
-          {isEditing ? (
-            <Textarea
-              rows={3}
-              value={formData.description}
-              onChange={(e) => {
-                setFormData({ ...formData, description: e.target.value });
-              }}
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-              {formData.description || "No description"}
-            </p>
-          )}
+
+          <Textarea
+            rows={3}
+            value={formData.description}
+            onChange={(e) => {
+              setFormData({ ...formData, description: e.target.value });
+            }}
+          />
         </div>
 
         <div className="space-y-2">
           <Label>Status</Label>
-          {isEditing ? (
-            <Select
-              value={formData.status}
-              onValueChange={(newValue) =>
-                setFormData({ ...formData, status: newValue })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="planned">Planned</SelectItem>
-                <SelectItem value="in progress">In Progress</SelectItem>
-                <SelectItem value="blocked">Blocked</SelectItem>
-                <SelectItem value="done">Done</SelectItem>
-              </SelectContent>
-            </Select>
-          ) : (
-            <Badge
-              className="ml-2 bg-amber-400"
-              variant={
-                formData.status === "blocked" ? "destructive" : "secondary"
-              }
-            >
-              {formData.status}
-            </Badge>
-          )}
+
+          <Select
+            value={formData.status}
+            onValueChange={(newValue) =>
+              setFormData({ ...formData, status: newValue })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="planned">Planned</SelectItem>
+              <SelectItem value="in progress">In Progress</SelectItem>
+              <SelectItem value="blocked">Blocked</SelectItem>
+              <SelectItem value="done">Done</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-2">
           <Label>Deadline</Label>
-          {isEditing ? (
-            <Input
-              type="date"
-              value={formData.deadline}
-              onChange={(e) => {
-                setFormData({ ...formData, deadline: e.target.value });
-              }}
-            />
-          ) : (
-            <p className="text-sm">{formData.deadline || "No deadline"}</p>
-          )}
+
+          <Input
+            type="date"
+            value={formData.deadline}
+            onChange={(e) => {
+              setFormData({ ...formData, deadline: e.target.value });
+            }}
+          />
         </div>
         <div className="space-y-2">
           <Label>Blockers</Label>
-          {isEditing ? (
-            <Textarea
-              rows={2}
-              value={formData.blockers}
-              onChange={(e) => {
-                setFormData({ ...formData, blockers: e.target.value });
-              }}
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-              {formData.blockers || "No blockers"}
-            </p>
-          )}
+
+          <Textarea
+            rows={2}
+            value={formData.blockers}
+            onChange={(e) => {
+              setFormData({ ...formData, blockers: e.target.value });
+            }}
+          />
         </div>
 
         <div className="space-y-2">
@@ -194,54 +173,43 @@ export default function EditProjectCard({
             )}
           </div>
         </div>
+        {isAdmin && (
+          <div className="space-y-2">
+            <UserMultiselect
+              selectedUserIds={formData.userIds}
+              onChange={(ids) => {
+                setFormData({ ...formData, userIds: ids });
+              }}
+            />
+          </div>
+        )}
 
-        <div className="space-y-2">
-          <UserMultiselect
-            selectedUserIds={formData.userIds}
-            disabled={!isEditing || !isAdmin}
-            onChange={(ids) => {
-              setFormData({ ...formData, userIds: ids });
-            }}
-          />
-        </div>
         {errorProject && (
           <p className="text-red-500 text-sm">{errorProject.message}</p>
         )}
         <div className="flex gap-2">
-          {isEditing ? (
-            <Button type="submit" disabled={isPendingProject}>
-              {isPendingProject ? "Saving..." : "Save"}
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                setIsEditing(true);
-              }}
-            >
-              Edit
-            </Button>
-          )}
-          {isEditing && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setFormData({
-                  name: projectData.name,
-                  description: projectData.description ?? "",
-                  status: projectData.status,
-                  deadline: projectData.deadline,
-                  blockers: projectData.blockers ?? "",
-                  userIds: assignedUsers.map((u) => u.id),
-                });
-                setIsEditing(false);
-              }}
-            >
-              Close
-            </Button>
-          )}
+          <Button type="submit" disabled={isPendingProject}>
+            {isPendingProject ? "Saving..." : "Save"}
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setFormData({
+                name: projectData.name,
+                description: projectData.description ?? "",
+                status: projectData.status,
+                deadline: projectData.deadline,
+                blockers: projectData.blockers ?? "",
+                userIds: assignedUsers.map((u) => u.id),
+              });
+              setIsEditing(false);
+            }}
+          >
+            Close
+          </Button>
+
           <div className="ml-auto">
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
@@ -257,7 +225,7 @@ export default function EditProjectCard({
             </Sheet>
           </div>
         </div>
-        {isEditing && isAdmin && (
+        {isAdmin && (
           <div className="flex justify-center">
             <AlertDialog>
               <AlertDialogTrigger asChild>

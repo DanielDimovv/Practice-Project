@@ -6,12 +6,38 @@ import { useCurrentUser } from "@/hooks/useAuth";
 import { useGetUserProjects } from "@/hooks/user";
 import { SelectProject } from "@/server/db/schema";
 
+import { useState } from "react";
+
 export default function Dashboard() {
   //Въпрос за добавяне на users към проекта и какво става когато имаме два hook-a в енда форма ( от арихитектурна гледна точка да се погледнат таблиците и да се обсъди какво правим ако в една форма ни се налага да позлваме два hooka )
 
   const { data: user } = useCurrentUser();
 
   const { data, isLoading, isError, error } = useGetUserProjects();
+
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const formData = new FormData();
+    if (!selectedFile) return;
+    formData.append("file", selectedFile);
+
+    const response = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (response.ok) {
+      console.log("File uploaded successfully");
+    } else {
+      console.error("Error uploading file");
+    }
+  };
 
   return (
     <>
@@ -37,6 +63,13 @@ export default function Dashboard() {
           ))}
         </div>
       )}
+
+      <div>
+        <form onSubmit={handleSubmit}>
+          <input type="file" onChange={handleFileChange} />
+          <button type="submit">Upload</button>
+        </form>
+      </div>
     </>
   );
 }
