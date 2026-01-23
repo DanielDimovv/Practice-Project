@@ -14,6 +14,7 @@ import {
 import { useState } from "react";
 import UserMultiselect from "./UserMultiSelect";
 import { useRouter } from "next/navigation";
+import ImageUploader from "../additional/ImageUploader";
 
 export type CreateProject = {
   name: string;
@@ -22,6 +23,7 @@ export type CreateProject = {
   deadline: string;
   blockers: string;
   userIds: number[];
+  imageId?:number | undefined;
 };
 
 type Props = {
@@ -43,6 +45,7 @@ export default function CreateProjectCard({
     deadline: "",
     blockers: "",
     userIds: [],
+    imageId:undefined
   });
 
   return (
@@ -54,6 +57,7 @@ export default function CreateProjectCard({
           onSubmit(formData);
         }}
       >
+        <ImageUploader type="project"  onUploadComplete={(imageId) => setFormData({...formData, imageId})} />
         <div className="space-y-2">
           <Label>Name</Label>
           <Input

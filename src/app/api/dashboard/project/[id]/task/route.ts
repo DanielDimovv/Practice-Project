@@ -1,5 +1,6 @@
 import { createTask, getProjectTasks } from "@/server/services/taskService";
 import { requireAuth } from "@/server/services/sessionService";
+import { createTaskImageJunction } from "@/server/services/imageServices";
 
 export async function GET(
   _request: Request,
@@ -36,7 +37,7 @@ export async function POST(
     }
     const { id } = await params;
 
-    const { name, status, deadline, assignee_id, blockers, description } =
+    const { name, status, deadline, assignee_id, blockers, description, imageId } =
       await request.json();
 
     const newTask = await createTask({
@@ -49,7 +50,12 @@ export async function POST(
       description,
     });
 
-    return Response.json({ task: newTask }, { status: 201 });
+    let imageRef
+
+    if (imageId) 
+      imageRef = await createTaskImageJunction(newTask.id,imageId)
+
+    return Response.json({ task: newTask, imageRef}, { status: 201 });
   } catch {
     return Response.json({ error: "Failed to create task" }, { status: 500 });
   }

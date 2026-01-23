@@ -1,5 +1,6 @@
 import {getTaskById, deleteTask, updateTask } from "@/server/services/taskService";
 import { requireAuth } from "@/server/services/sessionService";
+import { createTaskImageJunction, deleteTaskImage, getImageByTaskId } from "@/server/services/imageServices";
 
 
 export async function GET(
@@ -39,7 +40,7 @@ export async function PATCH(
 
     const { taskid } = await params;
 
-    const { name, description, status, deadline, blockers, assignee_id } =
+    const { name, description, status, deadline, blockers, assignee_id, imageId } =
       await request.json();
 
     const updatedTask = await updateTask(taskid, {
@@ -51,11 +52,25 @@ export async function PATCH(
       assignee_id,
     });
 
+    let imageToTask
+
+    if (imageId) {
+      const existingImage = await getImageByTaskId(taskid)
+
+      if (existingImage) {
+        await deleteTaskImage(existingImage.id)
+      }
+
+      imageToTask = await createTaskImageJunction(taskid,imageId)
+    }
+
+    
+
     if (!updatedTask) {
       return Response.json({ error: "Task not found" }, { status: 404 });
     }
 
-    return Response.json({ task: updatedTask }, { status: 200 });
+    return Response.json({ task: updatedTask, image:imageToTask }, { status: 200 });
   } catch {
     return Response.json({ error: "Failed to update task" }, { status: 500 });
   }

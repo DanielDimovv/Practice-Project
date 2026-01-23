@@ -8,6 +8,7 @@ type TaskData = {
   deadline: string;
   blockers?: string;
   assignee_id?: number | null;
+  imageId?:number | undefined
 };
 
 export function useGetTaskById(projectId: string, taskId: string) {
@@ -92,6 +93,7 @@ export function useUpdateTask(taskId: string, projectId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projectTasks", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["task", taskId] });
     },
   });
 }

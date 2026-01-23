@@ -3,8 +3,11 @@
 import { useParams } from "next/navigation";
 import { useGetTaskById } from "@/hooks/task";
 import CommentsSection from "@/components/comments/CommentsSection";
-import TaskCard from "@/components/projectCards/TaskCard";
+import TaskCard from "@/components/projectCards/EditTaskCard";
 import { useCurrentUser } from "@/hooks/useAuth";
+import { useState } from "react";
+import ViewTaskCard from "@/components/projectCards/ViewTaskCard";
+import EditTaskCard from "@/components/projectCards/EditTaskCard";
 
 export default function TaskPage() {
   const { id, taskId } = useParams();
@@ -13,6 +16,7 @@ export default function TaskPage() {
 
   const { data: user } = useCurrentUser();
   const isAdmin = user?.role === "admin";
+  const [isEditingTask, setIsEditingTask] = useState(false);
 
   const {
     data: taskData,
@@ -29,11 +33,19 @@ export default function TaskPage() {
         <div>
           {loadingTask && <p>Loading tasks...</p>}
           {errorTask && <p>Error loading task</p>}
-          <TaskCard
+          {isEditingTask ? <EditTaskCard
             task={taskData?.task}
             projectId={projectId}
             isAdmin={isAdmin}
-          />
+            setTaskEditing={setIsEditingTask}
+
+          /> : <ViewTaskCard 
+          task={taskData?.task}
+          projectId={projectId}
+          setTaskEditing={setIsEditingTask}  
+          isAdmin={isAdmin}
+        />}
+          
         </div>
         <div>
           <CommentsSection taskId={taskIdStr} projectId={projectId} />

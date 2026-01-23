@@ -1,5 +1,6 @@
 "use client";
 
+import UploadImage from "@/components/additional/ImageUploader";
 import ViewProjectCard from "@/components/projectCards/ViewProjectCard";
 import { useCurrentUser } from "@/hooks/useAuth";
 
@@ -64,12 +65,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div>
-        <form onSubmit={handleSubmit}>
-          <input type="file" onChange={handleFileChange} />
-          <button type="submit">Upload</button>
-        </form>
-      </div>
+      
+      
     </>
   );
 }

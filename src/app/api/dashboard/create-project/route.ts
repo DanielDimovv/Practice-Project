@@ -1,6 +1,7 @@
 import { createProject } from "@/server/services/projectService";
 import { syncProjectAssignments } from "@/server/services/projectAssignmentService";
 import { requireAuth } from "@/server/services/sessionService";
+import { createProjectImageJunction } from "@/server/services/imageServices";
 
 type CreateProjectBody = {
   name: string;
@@ -9,6 +10,7 @@ type CreateProjectBody = {
   deadline: string;
   blockers?: string;
   userIds?: number[] | undefined;
+  imageId?:number | undefined
 };
 
 export async function POST(request: Request) {
@@ -23,7 +25,7 @@ export async function POST(request: Request) {
 
     const body: CreateProjectBody = await request.json();
 
-    const { name, description, status, deadline, blockers, userIds } = body;
+    const { name, description, status, deadline, blockers, userIds,imageId } = body;
 
     if (!name || !status || !deadline) {
       return Response.json(
@@ -46,6 +48,15 @@ export async function POST(request: Request) {
       projectAssignments = await syncProjectAssignments(newProject.id, userIds);
     }
 
+    let imageRef 
+
+    if (imageId) {
+      imageRef = await createProjectImageJunction(newProject.id,imageId)
+    }
+
+
+
+
     return Response.json(
       {
         message: "Project created successfully",
@@ -57,6 +68,7 @@ export async function POST(request: Request) {
           deadline: newProject.deadline,
           blockers: newProject.blockers,
           assignments: projectAssignments,
+          imageRef
         },
       },
       { status: 201 }

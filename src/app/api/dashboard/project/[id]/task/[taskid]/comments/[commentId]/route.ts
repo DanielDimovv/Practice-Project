@@ -4,6 +4,8 @@ import {
   deleteComment,
 } from "@/server/services/taskCommentsService";
 import { requireAuth } from "@/server/services/sessionService";
+import { createCommentImageJunction, deleteCommentImage, getImageByCommentId } from "@/server/services/imageServices";
+
 
 export async function GET(
   _request: Request,
@@ -42,7 +44,7 @@ export async function PATCH(
     }
 
     const { commentId } = await params;
-    const { content } = await request.json();
+    const { content,imageId } = await request.json();
 
     if (!content || typeof content !== "string" || content.trim() === "") {
       return Response.json({ error: "Content is required" }, { status: 400 });
@@ -63,7 +65,19 @@ export async function PATCH(
 
     const updatedComment = await editComment(Number(commentId), content.trim());
 
-    return Response.json({ comment: updatedComment }, { status: 200 });
+    let imageToComment 
+
+if (imageId) {
+  const existingImage = await getImageByCommentId(Number(commentId));
+  
+  if (existingImage) {
+    await deleteCommentImage(existingImage.id);
+  }
+  
+  imageToComment = await createCommentImageJunction(Number(commentId), imageId);
+}
+
+    return Response.json({ comment: updatedComment, image:imageToComment }, { status: 200 });
   } catch {
     return Response.json(
       { error: "Failed to update comment" },

@@ -47,6 +47,7 @@ export function useCreateProject() {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+    
       
     },
   });
@@ -71,8 +72,10 @@ export function useUpdateProject(projectId: string) {
       queryClient.invalidateQueries({
         queryKey: ["currentProject", projectId],
       });
+      queryClient.invalidateQueries({ queryKey: ["imageToProject", projectId] });
       queryClient.invalidateQueries({
         queryKey: ["assignedUsersToProject", projectId],
+       
       });
     },
   });

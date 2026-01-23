@@ -29,14 +29,15 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
-import { Badge } from "../ui/badge";
 
-type Task = { task: SelectTask; projectId: string; isAdmin: boolean };
+import ImageUploader from "../additional/ImageUploader";
 
-export default function TaskCard({ task, projectId, isAdmin }: Task) {
+type Task = { task: SelectTask;setTaskEditing: React.Dispatch<React.SetStateAction<boolean>> , projectId: string; isAdmin: boolean };
+
+export default function EditTaskCard({ task, projectId, isAdmin,setTaskEditing }: Task) {
   const router = useRouter();
   const { data: assignedUsers } = useGetAssignedUsersToProject(projectId);
-  const [isEditing, setIsEditing] = useState(false);
+
   const [taskData, setTaskData] = useState({
     id: task.id,
     name: task.name,
@@ -45,6 +46,8 @@ export default function TaskCard({ task, projectId, isAdmin }: Task) {
     deadline: task.deadline ?? "",
     blockers: task.blockers ?? "",
     assignee_id: task.assignee_id,
+    imageId:undefined as number | undefined 
+
   });
 
   const {
@@ -66,14 +69,15 @@ export default function TaskCard({ task, projectId, isAdmin }: Task) {
           e.preventDefault();
           updateTask(taskData, {
             onSuccess: () => {
-              setIsEditing(false);
+              setTaskEditing(false);
             },
           });
         }}
       >
+        <ImageUploader type={"task"} onUploadComplete={(imageId) => setTaskData(prevTaskData => ({...prevTaskData, imageId}))} />
         <div className="space-y-2">
           <Label>Name</Label>
-          {isEditing ? (
+          
             <Input
               type="text"
               value={taskData.name}
@@ -81,14 +85,12 @@ export default function TaskCard({ task, projectId, isAdmin }: Task) {
                 setTaskData({ ...taskData, name: e.target.value });
               }}
             />
-          ) : (
-            <p className="font-medium text-lg">{taskData.name}</p>
-          )}
+          
         </div>
         <div className="space-y-2 ">
           <Label>Description</Label>
 
-          {isEditing ? (
+          
             <Textarea
               rows={3}
               value={taskData.description}
@@ -96,16 +98,12 @@ export default function TaskCard({ task, projectId, isAdmin }: Task) {
                 setTaskData({ ...taskData, description: e.target.value });
               }}
             />
-          ) : (
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-              {taskData.description || "No description"}
-            </p>
-          )}
+          
         </div>
         <div className="flex justify-between gap-2">
           <div className="space-y-2">
             <Label>Status</Label>
-            {isEditing ? (
+            
               <Select
                 value={taskData.status}
                 onValueChange={(newValue) => {
@@ -122,20 +120,11 @@ export default function TaskCard({ task, projectId, isAdmin }: Task) {
                   <SelectItem value="done">Done</SelectItem>
                 </SelectContent>
               </Select>
-            ) : (
-              <Badge
-                className="ml-2 bg-amber-300"
-                variant={
-                  taskData.status === "blocked" ? "destructive" : "secondary"
-                }
-              >
-                {taskData.status.replace("_", " ")}
-              </Badge>
-            )}
+           
           </div>
           <div className="space-y-2">
             <Label>Deadline</Label>
-            {isEditing ? (
+           
               <Input
                 type="date"
                 value={taskData.deadline}
@@ -143,15 +132,13 @@ export default function TaskCard({ task, projectId, isAdmin }: Task) {
                   setTaskData({ ...taskData, deadline: e.target.value });
                 }}
               />
-            ) : (
-              <p className="text-sm">{taskData.deadline || "No deadline"}</p>
-            )}
+            
           </div>
         </div>
 
         <div className="space-y-2">
           <Label>Blockers</Label>
-          {isEditing ? (
+          
             <Textarea
               rows={2}
               value={taskData.blockers}
@@ -159,15 +146,11 @@ export default function TaskCard({ task, projectId, isAdmin }: Task) {
                 setTaskData({ ...taskData, blockers: e.target.value });
               }}
             />
-          ) : (
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-              {taskData.blockers || "No blockers"}
-            </p>
-          )}
+         
         </div>
         <div className="space-y-2">
           <Label>Assignee</Label>
-          {isEditing ? (
+          
             <Select
               disabled={!isAdmin}
               value={taskData.assignee_id?.toString() ?? "none"}
@@ -190,13 +173,7 @@ export default function TaskCard({ task, projectId, isAdmin }: Task) {
                 ))}
               </SelectContent>
             </Select>
-          ) : (
-            <Badge variant="secondary" className="ml-2 bg-amber-300">
-              {assignedUsers?.users?.find(
-                (u: SelectUser) => u.id === taskData.assignee_id
-              )?.name || "Not assigned"}
-            </Badge>
-          )}
+        
         </div>
         <div className="flex gap-2">
           {updateError && (
@@ -205,18 +182,12 @@ export default function TaskCard({ task, projectId, isAdmin }: Task) {
           {deleteError && (
             <p className="text-red-500 text-sm">{deleteError.message}</p>
           )}
-          <Button
-            type="button"
-            className={isEditing ? "hidden" : ""}
-            onClick={() => setIsEditing(true)}
-          >
-            Edit
-          </Button>
+          
 
-          <Button type="submit" className={!isEditing ? "hidden" : ""}>
+          <Button type="submit" >
             {isUpdating ? "Saving..." : "Save"}
           </Button>
-          {isEditing && (
+         
             <Button
               type="button"
               variant="outline"
@@ -229,13 +200,14 @@ export default function TaskCard({ task, projectId, isAdmin }: Task) {
                   deadline: task.deadline ?? "",
                   blockers: task.blockers ?? "",
                   assignee_id: task.assignee_id,
+                  imageId:undefined
                 });
-                setIsEditing(false);
+                setTaskEditing(false);
               }}
             >
               Close
             </Button>
-          )}
+         
           <Button
             type="button"
             onClick={() => {

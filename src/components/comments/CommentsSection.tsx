@@ -14,6 +14,7 @@ import { useCurrentUser } from "@/hooks/useAuth";
 import { useEditComment, useDeleteComment } from "@/hooks/comments";
 
 import { CommentWithUser } from "@/hooks/comments";
+import ImageUploader from "../additional/ImageUploader";
 
 type CommentsSectionProps = {
   taskId: string;
@@ -24,6 +25,7 @@ export default function CommentsSection({
   taskId,
   projectId,
 }: CommentsSectionProps) {
+  const [commentImageId, setCommentImageId] = useState<number | undefined>(undefined);
   const { data: currentUser } = useCurrentUser();
   const [isConnected, setIsConnected] = useState(false);
 
@@ -112,17 +114,19 @@ export default function CommentsSection({
 
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
+  const [editImageId, setEditImageId] = useState<number | null>(null);
 
   function handleEditClick(comment: CommentWithUser) {
     setEditingCommentId(comment.id);
     setEditContent(comment.content);
+    setEditImageId(comment.imageId ?? null)
   }
 
   function handleSaveEdit() {
     if (editingCommentId === null) return;
 
     editComment(
-      { commentId: String(editingCommentId), content: editContent },
+      { commentId: String(editingCommentId), content: editContent, imageId: editImageId ?? undefined },
       {
         onSuccess: (data) => {
           socket.emit("edit-comment", {
@@ -134,10 +138,13 @@ export default function CommentsSection({
               userId: currentUser?.id,
               userName: currentUser?.name,
               userRole: currentUser?.role,
+              imageId:editImageId
+
             },
           });
           setEditingCommentId(null);
           setEditContent("");
+          setEditImageId(null)
         },
       }
     );
@@ -160,7 +167,7 @@ export default function CommentsSection({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     createComment(
-      { content: newComment },
+      { content: newComment,imageId:commentImageId },
       {
         onSuccess: (data) => {
           const payload = {
@@ -301,12 +308,24 @@ export default function CommentsSection({
         </ScrollArea>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-2">
+          <div className="flex gap-2">
           <Textarea
             placeholder="Write a comment..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
+            className="flex-6"
           />
-          <Button type="submit" disabled={isPending || !newComment.trim()}>
+          <div className="flex-4">
+  <ImageUploader 
+    type="comment" 
+    onUploadComplete={(imageId) => setCommentImageId(imageId)} 
+
+  />
+</div>
+
+          </div>
+          
+          <Button type="submit" disabled={isPending || (!newComment.trim() && !commentImageId)}>
             {isPending ? "Sending..." : "Send"}
           </Button>
         </form>

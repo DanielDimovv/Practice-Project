@@ -9,6 +9,7 @@ import CreateTaskCard from "./CreateTaskCard";
 import { useState } from "react";
 import { SelectUser } from "@/server/db/schema";
 import { SelectProject } from "@/server/db/schema";
+import ImageView from "../additional/ImageView";
 
 type props = {
   projectId: string;
@@ -43,7 +44,14 @@ export default function ViewEditProjectCard({
 
   return (
     <Card className="w-full max-w-md mx-auto p-4 sm:p-6 ">
+      
+
+
       <div className="space-y-4">
+<div className="space-y-2 mt-2">
+        <ImageView type={"project"} id={projectId} />
+      </div>
+
         <div className="space-y-2">
           <Label>Name</Label>
 

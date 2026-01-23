@@ -49,79 +49,59 @@ export async function getImageByCommentId(comment_id:number) {
 //  }
 
  
-export async function createProjectImage(data: InsertProjectImage, project_id: string) {
-  return await db.transaction(async (tx) => {
-    const [createdImage] = await tx.insert(projectImages).values(data).returning();
+export async function createProjectImage(data: InsertProjectImage) {
+  
+    const [createdImage] = await db.insert(projectImages).values(data).returning();
 
-    await tx.insert(projectImagesCross).values({
-      project_id,
-      image_id: createdImage.id,
-    });
+    
 
     return createdImage;
-  });
-}
-
-
-export async function createTaskImage(data:InsertTaskImage, task_id:string) {
-  return await db.transaction(async (tx) => {
-    const [createdImage] = await tx.insert(taskImages).values(data).returning()
-
-    await tx.insert(taskImagesCross).values({
-      task_id,
-      image_id:createdImage.id
-    })
-
-    return createdImage
-  })
-}
-
-export async function createCommentImage(data:InsertCommentImage,comment_id:number) {
-  return await db.transaction( async (tx) => {
-    const [createdImage] = await tx.insert(commentImages).values(data).returning()
-
-    await tx.insert(commentImagesCross).values({
-      comment_id,
-      image_id:createdImage.id
-
-    })
-
-    return createdImage
-  })
-}
-
-
-export async function updateProjectImage(id: number, url: string) {
-  const [updated] = await db
-    .update(projectImages)
-    .set({ url })
-    .where(eq(projectImages.id, id))
-    .returning();
   
-  return updated;
 }
 
+export async function createProjectImageJunction( projectId:string, imageId:number) { 
 
-export async function updateTaskImage(id: number, url: string) {
-  const [updated] = await db
-    .update(taskImages)
-    .set({ url })
-    .where(eq(taskImages.id, id))
-    .returning();
+  const [imageRef] = await db.insert(projectImagesCross).values({project_id:projectId,image_id:imageId}).returning()
+
+  return imageRef
   
-  return updated;
 }
 
 
-export async function updateCommentImage(id: number, url: string) {
-  const [updated] = await db
-    .update(commentImages)
-    .set({ url })
-    .where(eq(commentImages.id, id))
-    .returning();
+
+export async function createTaskImage(data:InsertTaskImage) {
+
+  const [createdImage] = await db.insert(taskImages).values(data).returning()
+
+  return createdImage
   
-  return updated;
 }
+
+export async function createTaskImageJunction( taskId:string, imageId:number) { 
+
+  const [imageRef] = await db.insert(taskImagesCross).values({task_id:taskId,image_id:imageId}).returning()
+
+  return imageRef
+  
+}
+
+export async function createCommentImage(data:InsertCommentImage){
+
+  const[createdImage] = await db.insert(commentImages).values(data).returning()
+
+  return createdImage
+}
+
+
+export async function createCommentImageJunction( commentId:number, imageId:number) {
+  const [imageRef] = await db.insert(commentImagesCross).values({comment_id:commentId,image_id:imageId}).returning()
+
+  return imageRef
+}
+
+
+
+
 
 
 export async function deleteProjectImage(id: number) {
@@ -156,11 +136,82 @@ export async function deleteCommentImage(id: number) {
 
 
 
+// export async function createProjectImage(data: InsertProjectImage, project_id: string) {
+//   return await db.transaction(async (tx) => {
+//     const [createdImage] = await tx.insert(projectImages).values(data).returning();
+
+//     await tx.insert(projectImagesCross).values({
+//       project_id,
+//       image_id: createdImage.id,
+//     });
+
+//     return createdImage;
+//   });
+// }
+
+
+// export async function createTaskImage(data:InsertTaskImage, task_id:string) {
+//   return await db.transaction(async (tx) => {
+//     const [createdImage] = await tx.insert(taskImages).values(data).returning()
+
+//     await tx.insert(taskImagesCross).values({
+//       task_id,
+//       image_id:createdImage.id
+//     })
+
+//     return createdImage
+//   })
+// }
+
+// export async function createCommentImage(data:InsertCommentImage,comment_id:number) {
+//   return await db.transaction( async (tx) => {
+//     const [createdImage] = await tx.insert(commentImages).values(data).returning()
+
+//     await tx.insert(commentImagesCross).values({
+//       comment_id,
+//       image_id:createdImage.id
+
+//     })
+
+//     return createdImage
+//   })
+// }
 
 
 
 
 
+// export async function updateProjectImage(id: number, url: string) {
+//   const [updated] = await db
+//     .update(projectImages)
+//     .set({ url })
+//     .where(eq(projectImages.id, id))
+//     .returning();
+  
+//   return updated;
+// }
+
+
+// export async function updateTaskImage(id: number, url: string) {
+//   const [updated] = await db
+//     .update(taskImages)
+//     .set({ url })
+//     .where(eq(taskImages.id, id))
+//     .returning();
+  
+//   return updated;
+// }
+
+
+// export async function updateCommentImage(id: number, url: string) {
+//   const [updated] = await db
+//     .update(commentImages)
+//     .set({ url })
+//     .where(eq(commentImages.id, id))
+//     .returning();
+  
+//   return updated;
+// }
 
 
 

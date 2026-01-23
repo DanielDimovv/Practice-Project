@@ -14,6 +14,7 @@ import { useGetAssignedUsersToProject } from "@/hooks/user";
 import { SelectUser } from "@/server/db/schema";
 import { Button } from "../ui/button";
 import { useCreateTask } from "@/hooks/task";
+import ImageUploader from "../additional/ImageUploader";
 
 type Props = {
   projectId: string;
@@ -28,6 +29,7 @@ type Task = {
   deadline: string;
   blockers?: string;
   assigneeId: number | null;
+  imageId?: number | undefined
 };
 export default function CreateTaskCard({
   projectId,
@@ -48,6 +50,7 @@ export default function CreateTaskCard({
     deadline: "",
     blockers: "",
     assigneeId: null,
+    imageId:undefined
   });
 
   return (
@@ -67,6 +70,7 @@ export default function CreateTaskCard({
               deadline: taskData.deadline,
               blockers: taskData.blockers,
               assignee_id: taskData.assigneeId,
+              imageId: taskData.imageId
             },
             {
               onSuccess: () => {
@@ -78,12 +82,16 @@ export default function CreateTaskCard({
                   deadline: "",
                   blockers: "",
                   assigneeId: null,
+                  imageId:undefined
                 });
               },
             }
           );
         }}
       >
+
+        <ImageUploader type="task" onUploadComplete={(imageId) => {setTaskData({...taskData,imageId})}} />
+
         <div className="space-y-2">
           <Label>Name</Label>
           <Input

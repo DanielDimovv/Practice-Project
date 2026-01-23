@@ -2,7 +2,9 @@ import { NextResponse } from "next/server"
 import path from "path"
 
 import { writeFile, mkdir } from "fs/promises";
-import { url } from "inspector";
+
+import { createProjectImage,createTaskImage,createCommentImage } from "@/server/services/imageServices";
+
 
 
 export async function POST(req:Request) {
@@ -10,6 +12,7 @@ export async function POST(req:Request) {
 
     const formData = await req.formData()
     const file = formData.get("file") as unknown as File
+    const type = formData.get("type") as "project" | "task" | "comment" | null;
 
     if (!file) {
       return NextResponse.json(
@@ -35,9 +38,24 @@ export async function POST(req:Request) {
 
     const imageUrl = `/uploads/${fileName}`
 
+    let imageRecord;
+
+    switch (type) {
+      case "project":
+        imageRecord = await createProjectImage({ url: imageUrl });
+        break;
+      case "task":
+        imageRecord = await createTaskImage({ url: imageUrl });
+        break;
+      case "comment":
+        imageRecord = await createCommentImage({ url: imageUrl });
+        break;
+    }
+
     return NextResponse.json({
       success: true,
-      url:imageUrl
+      url:imageRecord?.url,
+      imageId: imageRecord?.id
     })
 
 

@@ -5,6 +5,7 @@ import {
 } from "@/server/services/projectService";
 import { syncProjectAssignments } from "@/server/services/projectAssignmentService";
 import { requireAuth } from "@/server/services/sessionService";
+import { createProjectImageJunction , getImageByProjectId,deleteProjectImage} from "@/server/services/imageServices";
 
 export type UpdateProject = {
   name?: string;
@@ -13,6 +14,7 @@ export type UpdateProject = {
   deadline?: string;
   blockers?: string;
   userIds?: number[];
+  imageId?:number
 };
 
 export async function GET(
@@ -57,12 +59,29 @@ export async function PATCH(
 
     const updatedProject = await updateProject(id, projectData);
 
+    let imageToProject 
+
+  if (projectData.imageId) {
+    
+    const existingImage = await getImageByProjectId(id);
+    
+    
+    if (existingImage) {
+      await deleteProjectImage(existingImage.id);
+    }
+    
+   
+    imageToProject = await createProjectImageJunction(id, projectData.imageId);
+  }
+
+
     const updatedAssignments = await syncProjectAssignments(id, userIds ?? []);
 
     return Response.json(
       {
         updatedProject: updatedProject,
         updatedAssignments: updatedAssignments,
+        imageToProject: imageToProject
       },
       { status: 200 }
     );

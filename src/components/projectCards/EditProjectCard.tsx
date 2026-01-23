@@ -33,6 +33,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+import ImageUploader from "../additional/ImageUploader";
+
 export type EditProject = {
   name: string;
   description: string;
@@ -40,6 +42,7 @@ export type EditProject = {
   deadline: string;
   blockers: string;
   userIds: number[];
+  imageId?: number
 };
 
 type Props = {
@@ -74,6 +77,7 @@ export default function EditProjectCard({
     deadline: projectData.deadline,
     blockers: projectData.blockers ?? "",
     userIds: assignedUsers.map((u) => u.id),
+    imageId: undefined,
   });
   const { data: allUsers } = useGetAllUsers();
 
@@ -87,10 +91,9 @@ export default function EditProjectCard({
           setIsEditing(false);
         }}
       >
-        <div className="space-y-2">
-          <Label>Attach a picture</Label>
-          <input type="file" accept="image/*" onChange={handleUpload} />
-        </div>
+        <ImageUploader type={"project"} onUploadComplete={(imageId) => {
+    setFormData({ ...formData, imageId });
+  }} />
         <div className="space-y-2">
           <Label>Name</Label>
 

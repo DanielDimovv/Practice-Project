@@ -11,6 +11,7 @@ import Link from "next/link";
 import { SelectProject, SelectUser } from "@/server/db/schema";
 import { Label } from "../ui/label";
 import { useGetAssignedUsersToProject } from "@/hooks/user";
+import ImageView from "../additional/ImageView";
 
 type Props = {
   project: SelectProject;
@@ -25,6 +26,10 @@ export default function ViewProjectCard({ project }: Props) {
   return (
     <Card className="overflow-hidden">
       <CardHeader>
+      <div className="space-y-2 mt-2">
+        <ImageView type={"project"} id={project.id} />
+      </div>
+        
         <div className="flex justify-between items-start">
           <CardTitle>{project.name}</CardTitle>
           <Badge variant="outline">{project.status}</Badge>

@@ -8,6 +8,7 @@ export type CommentWithUser = {
   userId: number;
   userName: string;
   userRole:string
+  imageId: number | undefined
 };
 
 type CommentsResponse = {
@@ -36,7 +37,7 @@ export function useCreateComment(taskId: string, projectId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { content: string }) => {
+    mutationFn: async (data: { content: string, imageId?: number }) => {
       const response = await authFetch(
         `/api/dashboard/project/${projectId}/task/${taskId}/comments`,
         {
@@ -65,16 +66,18 @@ export function useEditComment(taskId: string, projectId: string) {
     mutationFn: async ({
       commentId,
       content,
+      imageId
     }: {
       commentId: string;
       content: string;
+      imageId?: number
     }) => {
       const response = await authFetch(
         `/api/dashboard/project/${projectId}/task/${taskId}/comments/${commentId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content }),
+          body: JSON.stringify({ content,imageId }),
         }
       );
       if (!response.ok) {
