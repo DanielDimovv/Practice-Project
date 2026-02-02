@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { socket } from "../../../socket";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -15,6 +15,8 @@ import { useEditComment, useDeleteComment } from "@/hooks/comments";
 
 import { CommentWithUser } from "@/hooks/comments";
 import ImageUploader from "../additional/ImageUploader";
+import ImageView from "../additional/ImageView";
+
 
 type CommentsSectionProps = {
   taskId: string;
@@ -25,9 +27,15 @@ export default function CommentsSection({
   taskId,
   projectId,
 }: CommentsSectionProps) {
+
+  const scrollToBottomDiv = useRef<HTMLDivElement|null>(null)
+
+
+  const [uploaderKey, setUploaderKey] = useState(0);
   const [commentImageId, setCommentImageId] = useState<number | undefined>(undefined);
   const { data: currentUser } = useCurrentUser();
   const [isConnected, setIsConnected] = useState(false);
+  const [imageIsLoaded,setImageIsLoaded]=useState(false)
 
   const queryClient = useQueryClient();
 
@@ -164,6 +172,13 @@ export default function CommentsSection({
     projectId
   );
 
+  useEffect(()=>{
+    const timeoutId = setTimeout(() => {
+      scrollToBottomDiv.current?.scrollIntoView({behavior:"smooth"})
+    }, 200);
+    return () => clearTimeout(timeoutId);
+  },[data,imageIsLoaded])
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     createComment(
@@ -179,11 +194,14 @@ export default function CommentsSection({
               userId: currentUser?.id,
               userName: currentUser?.name,
               userRole: currentUser?.role,
+              imageId: data.image?.image_id,
             },
           };
 
           socket.emit("send-comment", payload);
           setNewComment("");
+          setCommentImageId(undefined);
+          setUploaderKey(prev => prev + 1);
         },
       }
     );
@@ -254,7 +272,12 @@ export default function CommentsSection({
                           className="min-h-[100px] max-h-[250px] w-full overflow-y-auto"
                         />
                       ) : (
+                        <>
                         <p className="text-sm">{comment.content}</p>
+                        <ImageView type="comment" id={String(comment.id)} onImageLoad={ setImageIsLoaded }    />
+                        </>
+                        
+                        
                       )}
 
                       {isOwnComment && (
@@ -303,7 +326,9 @@ export default function CommentsSection({
                   </div>
                 );
               })}
+              <div ref={scrollToBottomDiv} />
             </div>
+            
           )}
         </ScrollArea>
 
@@ -319,6 +344,7 @@ export default function CommentsSection({
   <ImageUploader 
     type="comment" 
     onUploadComplete={(imageId) => setCommentImageId(imageId)} 
+    key={uploaderKey}
 
   />
 </div>

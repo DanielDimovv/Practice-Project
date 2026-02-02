@@ -8,6 +8,7 @@ import {
   usersTable,
 } from "../db/schema";
 import { eq, and, gt, lt } from "drizzle-orm";
+import { createActivity } from "./trackActivity";
 
 export const SESSION_DURATION = 60 * 60;
 
@@ -56,6 +57,8 @@ export async function getUserBySessionId(
 }
 
 export async function deleteSession(sessionId: string): Promise<boolean> {
+   
+  
   const [deletedSession] = await db
     .delete(sessionsTable)
     .where(eq(sessionsTable.id, sessionId))

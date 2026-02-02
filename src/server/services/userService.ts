@@ -2,14 +2,18 @@ import { db } from "../db/client";
 import { usersTable, SelectUser, InsertUser } from "../db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
+import { createActivity } from "./trackActivity";
 
 export async function createUser(data: InsertUser): Promise<SelectUser> {
   const hashedPassword = await bcrypt.hash(data.password, 10);
-  const result = await db
+  const [result] = await db
     .insert(usersTable)
     .values({ ...data, password: hashedPassword })
     .returning();
-  return result[0];
+
+    try{ await createActivity({ user_id: result.id, operation: "registered" }) }
+    catch (error) { console.error("Failed to log registered activity:", error);} 
+  return result;
 }
 
 export async function getUserById(id: number): Promise<SelectUser | undefined> {
@@ -37,6 +41,7 @@ export async function loginUser(
 ): Promise<SelectUser | null> {
   const user = await getUserByEmail(email);
 
+
   if (!user) {
     return null;
   }
@@ -45,6 +50,13 @@ export async function loginUser(
 
   if (!isPasswordValid) {
     return null;
+  }
+
+  try {
+    await createActivity({ user_id: user.id, operation: "login" });
+  } catch (error) {
+    console.error("Failed to log login activity:", error);
+    
   }
 
   return user;

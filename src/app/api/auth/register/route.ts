@@ -1,6 +1,7 @@
 import { createUser, getUserByEmail } from "@/server/services/userService";
 import {
   createSession,
+
   SESSION_DURATION,
 } from "@/server/services/sessionService";
 import { cookies } from "next/headers";
@@ -8,7 +9,10 @@ import { cookies } from "next/headers";
 export async function POST(request: Request) {
   const body = await request.json();
 
-  const { name, email, password } = body;
+  
+
+
+  const { name, email, password, role } = body;
 
   if (!name || !email || !password) {
     return Response.json({ error: "All fields are required" }, { status: 400 });
@@ -20,7 +24,8 @@ export async function POST(request: Request) {
     return Response.json({ error: "The email already exist" }, { status: 409 });
   }
 
-  const newUser = await createUser({ name, email, password });
+  const newUser = await createUser({ name, email, password, role });
+
 
   const session = await createSession(newUser.id);
 
@@ -32,6 +37,7 @@ export async function POST(request: Request) {
     maxAge: SESSION_DURATION,
     path: "/",
   });
+
 
   return Response.json(
     {

@@ -2,6 +2,7 @@ import { sqliteTable, int, text, primaryKey } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 export type UserRole = "admin" | "user";
 export type TaskStatus = "planned" | "in_progress" | "blocked" | "done";
+export type ActivityOperation = "login" | "logout" | "registered";
 
 export const usersTable = sqliteTable("users", {
   id: int().primaryKey({ autoIncrement: true }),
@@ -76,6 +77,15 @@ export const taskComments = sqliteTable("task_comments", {
     .notNull()
     .$defaultFn(() => Math.floor(Date.now() / 1000)),
 });
+
+export const trackActivity = sqliteTable("track_activity",{
+  id: int().primaryKey({autoIncrement:true}),
+  user_id: int().notNull().references(() => usersTable.id,{onDelete:"cascade"}) ,
+  operation:text().$type<ActivityOperation>().notNull(),
+  time:int().notNull().$defaultFn(()=> Math.floor(Date.now() / 1000))
+
+})
+
 
 
 export const projectImages = sqliteTable("project_images", {
@@ -204,3 +214,6 @@ export type InsertCommentImage = typeof commentImages.$inferInsert;
 
 export type SelectCommentImagesCross = typeof commentImagesCross.$inferSelect;
 export type InsertCommentImagesCross = typeof commentImagesCross.$inferInsert;
+
+export type SelectTrackActivity = typeof trackActivity.$inferSelect;
+export type InsertTrackActivity = typeof trackActivity.$inferInsert;

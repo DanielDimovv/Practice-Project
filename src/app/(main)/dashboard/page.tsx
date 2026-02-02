@@ -1,6 +1,6 @@
 "use client";
 
-import UploadImage from "@/components/additional/ImageUploader";
+
 import ViewProjectCard from "@/components/projectCards/ViewProjectCard";
 import { useCurrentUser } from "@/hooks/useAuth";
 
@@ -16,29 +16,7 @@ export default function Dashboard() {
 
   const { data, isLoading, isError, error } = useGetUserProjects();
 
-  const [selectedFile, setSelectedFile] = useState(null);
-
-  const handleFileChange = (event) => {
-    setSelectedFile(event.target.files[0]);
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    const formData = new FormData();
-    if (!selectedFile) return;
-    formData.append("file", selectedFile);
-
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (response.ok) {
-      console.log("File uploaded successfully");
-    } else {
-      console.error("Error uploading file");
-    }
-  };
+  
 
   return (
     <>

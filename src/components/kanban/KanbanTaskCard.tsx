@@ -11,6 +11,7 @@ import { Label } from "@radix-ui/react-label";
 import { Button } from "../ui/button";
 import Link from "next/link";
 import { useDraggable } from "@dnd-kit/core";
+import ImageView from "../additional/ImageView";
 
 interface KanbanTaskCardProps {
   task: SelectTask;
@@ -61,7 +62,9 @@ export default function KanbanTaskCard({
       className="overflow-hidden cursor-grab active:cursor-grabbing"
     >
       <CardHeader>
+      <div><ImageView type="task" id={task.id} /></div>
         <div className="flex justify-between items-start">
+          
           <CardTitle>{task.name}</CardTitle>
           <Badge
             variant="outline"

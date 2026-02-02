@@ -1,29 +1,28 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { SelectUser } from "@/server/db/schema";
+import { InsertUser, SelectUser } from "@/server/db/schema";
 import { authFetch } from "@/lib/authFetch";
-import { UserRole } from "@/server/db/schema";
+import { error } from "console";
 
-// export function useGetUserProjects(userId: number, role: string) {
-//   return useQuery({
-//     queryKey: ["projects", userId, role],
-//     queryFn: async () => {
-//       const response = await fetch(
-//         `/api/dashboard?userId=${userId}&role=${role}`,
-//         {
-//           method: "GET",
-//           headers: { "Content-Type": "application/json" },
-//         }
-//       );
 
-//       if (!response.ok) {
-//         throw new Error("Failed to fetch projects");
-//       }
+export function useGetActivityHistory() {
+  return useQuery({
+    queryKey:["activityHistory"],
+    queryFn: async () => {
+      const response = await authFetch('/api/activity-log',{
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      })
 
-//       const data = await response.json();
-//       return data;
-//     },
-//   });
-// }
+      if (!response.ok) {
+        throw new Error("Failed to fetch activities log");
+      }
+      
+      const data = await response.json()
+      return data
+    }
+  })
+}
+
 
 export function useGetUserProjects() {
   return useQuery({
@@ -85,19 +84,39 @@ export function useGetAllUsers() {
   });
 }
 
-export function useUpdateUserRole() {
+
+export function useCreateNewUser(){
+  return useMutation({
+    mutationFn: async (userData:InsertUser) => {
+      const response = await authFetch("/api/users", {
+        method:"POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData)
+      }) 
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error)
+      }
+
+      return await response.json()
+    }
+  })
+}
+
+export function useUpdateUserData() {
   return useMutation({
     mutationFn: async ({
       userId,
-      role,
+      userData,
     }: {
       userId: number;
-      role: UserRole;
+      userData: InsertUser;
     }) => {
       const response = await authFetch(`/api/users/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role }),
+        body: JSON.stringify( userData ),
       });
       if (!response.ok) {
         const errorData = await response.json();

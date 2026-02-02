@@ -3,7 +3,7 @@ import { useCurrentUser, useLogout } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 import Link from "next/link";
-import ManageRoleDialog from "./ManageRoleDialog";
+
 import { usePathname } from "next/navigation";
 
 export default function Header() {
@@ -28,7 +28,10 @@ export default function Header() {
                 <Button variant="outline" size="sm" asChild>
                   <Link href="/create-project">Add Project</Link>
                 </Button>
-                <ManageRoleDialog />
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/manage-users">Manage Users</Link>
+                </Button>
+            
               </>
             )}
             <Button

@@ -10,6 +10,7 @@ import { useState } from "react";
 import { SelectUser } from "@/server/db/schema";
 import { SelectProject } from "@/server/db/schema";
 import ImageView from "../additional/ImageView";
+import ReactMarkdown from 'react-markdown';
 
 type props = {
   projectId: string;
@@ -60,9 +61,9 @@ export default function ViewEditProjectCard({
         <div className="space-y-2">
           <Label>Description</Label>
 
-          <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-            {projectData.description || "No description"}
-          </p>
+          <div className="text-sm text-muted-foreground wrap-break-word overflow-hidden">
+           <ReactMarkdown>{projectData.description || "No description"}</ReactMarkdown> 
+          </div>
         </div>
 
         <div className="space-y-2">

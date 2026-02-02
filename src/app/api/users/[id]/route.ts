@@ -1,5 +1,7 @@
 import { deleteUser, updateUser } from "@/server/services/userService";
 import { requireAuth } from "@/server/services/sessionService";
+import bcrypt from "bcrypt";
+
 
 export async function PATCH(
   request: Request,
@@ -18,13 +20,30 @@ export async function PATCH(
   const { id } = await params;
   const targetUserId = Number(id);
 
-  const { role } = await request.json();
+  const { name, email, password, role } = await request.json();
+
+  console.log(role)
 
   if (role !== "admin" && role !== "user") {
     return Response.json({ error: "Invalid role" }, { status: 400 });
   }
 
-  const updatedUser = await updateUser(targetUserId, { role });
+  const updateData: {
+    name: string;
+    email: string;
+    password?: string;
+    role: "admin" | "user";
+  } = {
+    name,
+    email,
+    role,
+  };
+
+  if (password) {
+    updateData.password = await bcrypt.hash(password, 10);
+  }
+
+  const updatedUser = await updateUser(targetUserId, updateData);
 
   if (!updatedUser) {
     return Response.json({ error: "User not found" }, { status: 404 });
@@ -32,7 +51,7 @@ export async function PATCH(
 
   return Response.json(
     {
-      message: "User role updated",
+      message: "User updated",
       user: updatedUser,
     },
     { status: 200 }

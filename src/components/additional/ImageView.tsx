@@ -2,14 +2,15 @@ import Image from "next/image"
 type ImageViewProps = {
     type: "project" | "task"|"comment"
     id : string ,
-    isLoading?: boolean
+    isLoading?: boolean,
+    onImageLoad?: (loaded: boolean) => void
 
 }
 import { Loader2 } from "lucide-react"
 import { useGetImageByCommentId,useGetImageByProjectId,useGetImageByTaskId } from "@/hooks/image"
 
 
-export default function ImageView({ type, id , isLoading: parentLoading}: ImageViewProps) {
+export default function ImageView({ type, id , isLoading: parentLoading, onImageLoad}: ImageViewProps) {
   
     const sizeClasses = {
       project: "w-full h-48",      
@@ -40,9 +41,10 @@ export default function ImageView({ type, id , isLoading: parentLoading}: ImageV
 
       const isLoading = (parentLoading ?? false) || imageLoading
 
-      // if (!isLoading && !data?.imageUrl) {
-      //   return null;
-      // }
+     
+      if (type === "comment" && !data?.imageUrl) {
+        return null;
+      }
 
     return (
       <div className={`relative ${sizeClasses[type]}`}>
@@ -53,6 +55,7 @@ export default function ImageView({ type, id , isLoading: parentLoading}: ImageV
         <Image 
         src={data.imageUrl} 
         alt={data.imageUrl.split("/").pop() ?? "Image"}
+        onLoad={() => onImageLoad?.(true)}
         fill
         className="object-cover rounded-md"
       /> : "Here you can upload an image"}

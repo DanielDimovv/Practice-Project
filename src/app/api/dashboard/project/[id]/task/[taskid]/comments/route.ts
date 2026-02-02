@@ -51,8 +51,11 @@ export async function POST(
     const { taskid } = await params;
     const { content,imageId } = await request.json();
 
-    if (!content || typeof content !== "string" || content.trim() === "") {
-      return Response.json({ error: "Content is required" }, { status: 400 });
+    const hasContent = content && typeof content === "string" && content.trim() !== "";
+    const hasImage = !!imageId;
+    
+    if (!hasContent && !hasImage) {
+      return Response.json({ error: "Content or image is required" }, { status: 400 });
     }
 
     const createdComment = await createComment({
